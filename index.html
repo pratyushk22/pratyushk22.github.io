@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About Me — Prat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ffffff;
+    --fg:#1c1c1c;
+    --soft:#5a5a5a;
+    --link:#b34029;
+    --link-hover:#8a2d1b;
+    --line:#e6e6e6;
+    --chip:#f4f2ee;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:var(--bg);color:var(--fg);
+    font-family:'Lato',-apple-system,sans-serif;
+    font-size:16px;line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:0 24px}
+  a{color:var(--link);text-decoration:none}
+  a:hover{color:var(--link-hover);text-decoration:underline}
+
+  /* top bar */
+  header.top{border-bottom:1px solid var(--line)}
+  header.top .wrap{display:flex;justify-content:space-between;align-items:center;padding:18px 24px}
+  .name{font-family:'Lora',serif;font-weight:600;font-size:20px;color:var(--fg)}
+  .name:hover{text-decoration:none}
+  nav a{font-size:15px;margin-left:22px;color:var(--soft)}
+
+  /* intro */
+  .intro{display:flex;gap:30px;align-items:flex-start;padding:42px 0 10px}
+  @media(max-width:560px){.intro{flex-direction:column;gap:20px}}
+  .photo{flex-shrink:0}
+  .photo img{width:165px;height:165px;object-fit:cover;border-radius:6px;border:1px solid var(--line);background:var(--chip)}
+  .photo .ph{width:165px;height:165px;border-radius:6px;background:var(--chip);display:flex;align-items:center;justify-content:center;color:#bbb;font-size:13px;text-align:center;border:1px solid var(--line)}
+  .intro .who{font-family:'Lora',serif;font-weight:600;font-size:26px;margin-bottom:6px}
+  .intro .aff{color:var(--soft);font-size:15px;line-height:1.5;margin-bottom:14px}
+  .intro .contacts{font-size:14.5px;line-height:1.9}
+  .intro .contacts a{margin-right:2px}
+
+  h2{font-family:'Lora',serif;font-weight:600;font-size:23px;margin:38px 0 6px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+  p.lead{margin:14px 0}
+
+  /* news */
+  .year{font-weight:700;margin:18px 0 6px;font-size:15px}
+  .news{list-style:none}
+  .news li{display:flex;gap:14px;padding:5px 0;font-size:15px;align-items:baseline}
+  .news .date{flex-shrink:0;color:var(--soft);font-variant-numeric:tabular-nums;font-size:13.5px;width:92px}
+
+  /* publications */
+  .pub{display:flex;gap:18px;padding:18px 0;border-bottom:1px solid var(--line);align-items:flex-start}
+  .pub:last-child{border-bottom:none}
+  .pub .thumb{flex-shrink:0;width:150px}
+  .pub .thumb img{width:150px;border-radius:4px;border:1px solid var(--line)}
+  .pub .thumb .ph{width:150px;height:90px;background:var(--chip);border:1px solid var(--line);border-radius:4px;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:12px}
+  @media(max-width:560px){.pub{flex-direction:column;gap:10px}.pub .thumb,.pub .thumb img,.pub .thumb .ph{width:100%}}
+  .pub .meta .t{font-weight:700;font-size:15.5px;line-height:1.4}
+  .pub .meta .a{font-size:14.5px;color:var(--fg);margin:3px 0}
+  .pub .meta .a b{font-weight:700}
+  .pub .meta .v{font-size:14px;color:var(--soft);font-style:italic}
+  .pub .meta .lnks{margin-top:6px;font-size:13.5px}
+  .pub .meta .lnks a{margin-right:10px;background:var(--chip);padding:2px 9px;border-radius:3px}
+  .pub .meta .lnks a:hover{text-decoration:none;background:#ece9e2}
+
+  /* list-style sections */
+  .litem{padding:9px 0;font-size:15px;border-bottom:1px solid var(--line)}
+  .litem:last-child{border-bottom:none}
+  .litem .h{font-weight:700;color:var(--link)}
+  .litem .meta{color:var(--soft);font-size:13.5px}
+
+  blockquote{margin:34px 0 10px;padding:14px 20px;border-left:3px solid var(--line);color:var(--soft);font-family:'Lora',serif;font-style:italic;font-size:16px}
+  blockquote .by{display:block;font-style:normal;font-size:13.5px;margin-top:6px;color:#999}
+
+  footer{text-align:center;color:#aaa;font-size:13px;padding:40px 0 50px}
+  hr.div{border:none;border-top:1px solid var(--line);margin:0}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="name" href="#">Prat</a>
+    <nav>
+      <a href="#publications">Publications</a>
+      <a href="#projects">Projects</a>
+      <a href="#">Resume</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="intro">
+    <div class="photo">
+      <div class="ph">your photo<br>(me.jpg)</div>
+      <!-- replace with: <img src="me.jpg" alt="Prat"> -->
+    </div>
+    <div class="who-block">
+      <div class="who">Prat</div>
+      <div class="aff">
+        B.Tech, Electronics &amp; Electrical Engineering<br>
+        Indian Institute of Technology Guwahati
+      </div>
+      <div class="contacts">
+        <a href="mailto:you@example.com">you@example.com</a><br>
+        <a href="https://github.com/yourhandle">Github</a> ·
+        <a href="https://scholar.google.com/">Google Scholar</a> ·
+        <a href="https://linkedin.com/in/yourhandle">LinkedIn</a>
+      </div>
+    </div>
+  </div>
+
+  <h2 id="about">About Me</h2>
+  <p class="lead">I am from India 🇮🇳. I'm an undergraduate in Electronics &amp; Electrical Engineering at IIT Guwahati, working on my Bachelor's Thesis under <a href="#">Prof. M. K. Bhuyan</a> (EEE &amp; Mehta School of Data Science &amp; AI). My interests span biomedical signal processing, deep learning for time series, and quantitative finance. Feel free to reach out for any queries.</p>
+
+  <h2>News</h2>
+  <div class="year">2026</div>
+  <ul class="news">
+    <li><span class="date">14.08.2026</span><span>Target submission date for our IHCI 2026 paper on Neural-ODE ECG denoising (Springer LNCS).</span></li>
+    <li><span class="date">01.2026</span><span>Started a project at Mastercard on behavioral drift detection over transaction graphs.</span></li>
+    <li><span class="date">01.2026</span><span>Began Bachelor's Thesis research under Prof. M. K. Bhuyan.</span></li>
+  </ul>
+
+  <h2 id="publications">Publications</h2>
+
+  <div class="pub">
+    <div class="thumb"><div class="ph">paper1.png</div></div>
+    <div class="meta">
+      <div class="t">ECG Denoising via Neural ODEs with Symmetric-Jacobian Regularization</div>
+      <div class="a"><b>Prat</b>, [co-author], M. K. Bhuyan.</div>
+      <div class="v">IHCI 2026 (Springer LNCS) — in progress</div>
+      <div class="lnks"><a href="#">arXiv</a><a href="#">Code</a><a href="#">Project Page</a></div>
+    </div>
+  </div>
+
+  <h2 id="projects">Projects</h2>
+  <div class="litem">
+    <a class="h" href="#">Behavioral Drift Detection :</a>
+    bipartite account–merchant graph topology metrics over US open-banking data, built in PySpark on Databricks (Mastercard).
+  </div>
+  <div class="litem">
+    <a class="h" href="#">PortfolioArchitect :</a>
+    systematic quant engine with regime detection, multi-factor signal blending, and inverse-volatility risk parity; backtest Sharpe ~1.0 → ~1.7 (GS Hackathon 2026).
+  </div>
+  <div class="litem">
+    <a class="h" href="#">Competitive Programming :</a>
+    active in C++ across CSES, Codeforces, SPOJ — string and tree algorithms, with a personal bug notebook.
+  </div>
+
+  <h2>Experience</h2>
+  <div class="litem">
+    <a class="h" href="#">Mastercard :</a> Data drift / behavioral drift detection on open-banking data.
+    <span class="meta">[2026]</span>
+  </div>
+  <div class="litem">
+    <a class="h" href="#">BTP, IIT Guwahati :</a> Cardiac signal modeling under Prof. M. K. Bhuyan.
+    <span class="meta">[2026 – present]</span>
+  </div>
+
+  <h2>Achievements</h2>
+  <div class="litem"><a class="h" href="#">Goldman Sachs India Hackathon 2026 :</a> built the PortfolioArchitect quant strategy engine.</div>
+  <div class="litem"><a class="h" href="#">Competitive Programming :</a> active profiles on Codeforces, CSES, SPOJ.</div>
+
+  <h2>Coursework</h2>
+  <ul class="news">
+    <li><span class="date">EE352</span><span>Advanced Control Systems — state-space, controllability, ZOH</span></li>
+    <li><span class="date">—</span><span>Power Electronics — converters, rectifiers, inverters, SPWM</span></li>
+    <li><span class="date">—</span><span>Machine Learning — GLMs, exponential family, logistic regression</span></li>
+    <li><span class="date">—</span><span>Signal Processing — wavelets, filtering, time-series</span></li>
+    <li><span class="date">—</span><span>Data Structures &amp; Algorithms — graphs, trees, strings</span></li>
+    <li><span class="date">—</span><span>Organic Electronics — PEDOT:PSS, PANI, OLEDs</span></li>
+  </ul>
+
+  <blockquote>
+    If you can't explain something to a first-year student, then you haven't really understood it.
+    <span class="by">— R. Feynman</span>
+  </blockquote>
+
+  <footer>© 2026 Prat · IIT Guwahati</footer>
+
+</div>
+</body>
+</html>
