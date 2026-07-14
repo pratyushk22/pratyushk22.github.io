@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Straight lines and where they lead — CS229 Lecture 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+  chtml: { scale: 1.0 },
+  options: { renderActions: { addMenu: [] } }
+};
+</script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+<style>
+  :root{
+    --paper:#FBFAF6;
+    --ink:#1B1B18;
+    --ink-soft:#57544C;
+    --ink-faint:#8A877D;
+    --pen:#C4142A;
+    --pen-soft:rgba(196,20,42,0.07);
+    --rule:rgba(27,27,24,0.14);
+    --grid:rgba(27,27,24,0.045);
+    --maxcol:700px;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:26px 26px;
+    color:var(--ink);
+    font-family:'Newsreader', Georgia, serif;
+    font-size:20px;
+    line-height:1.66;
+    font-weight:400;
+  }
+  .wrap{max-width:964px;margin:0 auto;padding:0 32px 120px;}
+
+  .backlink{
+    max-width:var(--maxcol);margin:0 auto;padding:26px 0 0;
+    font-family:'JetBrains Mono', monospace;font-size:13px;letter-spacing:0.02em;
+  }
+  .backlink a{color:var(--ink-faint);border:none;}
+  .backlink a:hover{color:var(--pen);}
+
+  /* ---------- header ---------- */
+  header.masthead{
+    max-width:var(--maxcol);
+    margin:0 auto;
+    padding:40px 0 40px;
+    border-bottom:1px solid var(--rule);
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    letter-spacing:0.22em;
+    text-transform:uppercase;
+    color:var(--pen);
+    font-weight:500;
+    margin:0 0 26px;
+  }
+  h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:500;
+    font-size:52px;
+    line-height:1.04;
+    letter-spacing:-0.02em;
+    margin:0 0 22px;
+  }
+  .dek{
+    font-size:21px;
+    color:var(--ink-soft);
+    line-height:1.5;
+    margin:0 0 30px;
+    font-weight:400;
+  }
+  .meta{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    letter-spacing:0.04em;
+    color:var(--ink-faint);
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  .meta .dot{width:3px;height:3px;border-radius:50%;background:var(--ink-faint);display:inline-block;}
+
+  /* ---------- article ---------- */
+  article{
+    max-width:var(--maxcol);
+    margin:0 auto;
+    padding-top:8px;
+  }
+  article p{margin:0 0 22px;}
+  .lede{font-size:22px;line-height:1.55;margin-top:38px;}
+  .lede::first-letter{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    float:left;
+    font-size:70px;
+    line-height:0.82;
+    padding:6px 12px 0 0;
+    color:var(--pen);
+  }
+
+  section{margin-top:56px;}
+  h2{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:500;
+    font-size:29px;
+    line-height:1.15;
+    letter-spacing:-0.01em;
+    margin:0 0 8px;
+    display:flex;
+    align-items:baseline;
+    gap:16px;
+  }
+  .num{
+    flex:none;
+    font-family:'JetBrains Mono', monospace;
+    font-size:15px;
+    font-weight:500;
+    color:var(--pen);
+    border:1.5px solid var(--pen);
+    border-radius:50%;
+    width:34px;height:34px;
+    display:inline-flex;
+    align-items:center;justify-content:center;
+    transform:translateY(2px);
+  }
+  h2 + .kicker{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    margin:0 0 24px 50px;
+  }
+  h3{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:500;
+    font-size:20px;
+    letter-spacing:0.01em;
+    margin:38px 0 6px;
+  }
+
+  .term{
+    border-bottom:2px solid var(--pen);
+    padding-bottom:0.5px;
+    font-weight:500;
+  }
+  strong{font-weight:500;}
+  em{font-style:italic;}
+
+  code, .mono{font-family:'JetBrains Mono', monospace;font-size:0.82em;}
+
+  /* pull quote / key idea */
+  .idea{
+    margin:34px 0;
+    padding:4px 0 4px 26px;
+    border-left:3px solid var(--pen);
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:400;
+    font-size:23px;
+    line-height:1.4;
+    letter-spacing:-0.01em;
+  }
+  .idea .lab{
+    display:block;
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color:var(--pen);
+    margin-bottom:10px;
+    font-weight:500;
+  }
+
+  /* sidenotes — red pen in the margin */
+  .sidenote{
+    float:right;
+    clear:right;
+    width:196px;
+    margin:6px -232px 22px 0;
+    font-family:'Newsreader', serif;
+    font-size:15.5px;
+    line-height:1.5;
+    color:var(--ink-soft);
+    border-top:2px solid var(--pen);
+    padding-top:10px;
+  }
+  .sidenote .sn-lab{
+    display:block;
+    font-family:'JetBrains Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--pen);
+    margin-bottom:6px;
+  }
+
+  mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%;}
+  mjx-container[display="true"]{margin:26px 0 !important;}
+
+  hr.soft{border:none;border-top:1px solid var(--rule);margin:56px 0;}
+
+  footer{
+    max-width:var(--maxcol);
+    margin:80px auto 0;
+    padding-top:28px;
+    border-top:1px solid var(--rule);
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    color:var(--ink-faint);
+    line-height:1.7;
+  }
+  footer .pen{color:var(--pen);}
+
+  a{color:var(--pen);text-decoration:none;border-bottom:1px solid rgba(196,20,42,0.35);}
+
+  @media (max-width:900px){
+    .sidenote{
+      float:none;width:auto;margin:24px 0;
+      border-top:none;border-left:3px solid var(--pen);
+      padding:2px 0 2px 18px;
+    }
+  }
+  @media (max-width:620px){
+    body{font-size:18px;}
+    .wrap{padding:0 20px 90px;}
+    header.masthead{padding:32px 0 32px;}
+    h1{font-size:38px;}
+    .dek{font-size:19px;}
+    .lede::first-letter{font-size:58px;}
+    h2{font-size:25px;gap:12px;}
+    .num{width:30px;height:30px;font-size:14px;}
+    h2 + .kicker{margin-left:42px;}
+    .idea{font-size:20px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<p class="backlink"><a href="index.html">← CS229 notes</a></p>
+
+<header class="masthead">
+  <p class="eyebrow">Stanford CS229 · Lecture One</p>
+  <h1>Straight lines and where they lead</h1>
+  <p class="dek">Rebuilding the opening lecture of Stanford's machine-learning course from the ground up — linear regression, the normal equations, and the quiet unity that connects logistic regression, Newton's method, and the whole family of generalized linear models.</p>
+  <div class="meta">
+    <span>Notes from CS229</span>
+    <span class="dot"></span>
+    <span>~18 min read</span>
+    <span class="dot"></span>
+    <span>intuition first, then the math</span>
+  </div>
+</header>
+
+<article>
+
+<p class="lede">Every machine-learning course seems to begin with fitting a straight line to some points, and it is tempting to treat that as a warm-up before the real material. It is not. Almost everything that comes later — classification, neural networks, the probabilistic view of learning — is already hiding inside that first fit, if you look at it the right way. This is my attempt to look at it the right way.</p>
+
+<p>The setup is deliberately mundane. We have a dataset: houses in Portland, each with a living area and a price. We want to predict the price of a new house from its size. In the language we will use everywhere from here on, each house gives us an <span class="term">input</span> \(x^{(i)}\) and a <span class="term">target</span> \(y^{(i)}\), and the pair \((x^{(i)}, y^{(i)})\) is a <span class="term">training example</span>. The whole collection is the training set. The goal is to learn a function \(h\) — a <span class="term">hypothesis</span> — so that \(h(x)\) is a good guess for \(y\).</p>
+
+<p>When the thing we predict is continuous, like a price, we call it <em>regression</em>. When it takes a few discrete values — spam or not-spam, house or apartment — we call it <em>classification</em>. Both will turn out to be the same idea wearing different clothes.</p>
+
+<section>
+  <h2><span class="num">1</span>The simplest possible guess</h2>
+  <p class="kicker">Linear regression &amp; the cost function</p>
+
+  <p>We have to decide what shape \(h\) can take. The most modest choice is a straight line — or in higher dimensions, a flat plane. We assume the output is a weighted sum of the inputs:</p>
+
+  \[ h_\theta(x) = \theta_0 + \theta_1 x_1 + \theta_2 x_2 + \cdots = \sum_{i=0}^{d} \theta_i x_i = \theta^\top x \]
+
+  <p>The \(\theta_i\) are the <span class="term">parameters</span>, the knobs we get to turn. With the convention \(x_0 = 1\) folded in, the whole hypothesis collapses to a single dot product \(\theta^\top x\). That compactness is not just tidiness — it is the reason the linear-algebra machinery later feels so natural.</p>
+
+  <p>Now, how do we pick the knobs? We need a way to score how wrong a given \(\theta\) is. The natural score is the total squared error between our predictions and the truth — the <span class="term">least-squares cost function</span>:</p>
+
+  \[ J(\theta) = \frac{1}{2}\sum_{i=1}^{n}\bigl(h_\theta(x^{(i)}) - y^{(i)}\bigr)^2 \]
+
+  <p>Squaring does two jobs at once: it makes errors positive so they cannot cancel, and it punishes big misses far more than small ones. The factor of \(\tfrac{1}{2}\) is pure convenience — it will cancel a stray 2 when we differentiate. Our job is now sharply defined: find the \(\theta\) that makes \(J(\theta)\) as small as possible.</p>
+</section>
+
+<section>
+  <h2><span class="num">2</span>Walking downhill</h2>
+  <p class="kicker">Gradient descent, batch and stochastic</p>
+
+  <p>\(J(\theta)\) is a landscape sitting above the space of all possible \(\theta\). We want its lowest point. The obvious strategy is to stand somewhere, feel which way is downhill, and step that way. That is <span class="term">gradient descent</span>:</p>
+
+  \[ \theta_j := \theta_j - \alpha\,\frac{\partial}{\partial \theta_j} J(\theta) \]
+
+  <p>The <span class="term">learning rate</span> \(\alpha\) sets the step size. Work out that derivative for a single example and something pleasing falls out:</p>
+
+  \[ \theta_j := \theta_j + \alpha\bigl(y^{(i)} - h_\theta(x^{(i)})\bigr)\,x_j^{(i)} \]
+
+  <span class="sidenote"><span class="sn-lab">why it feels right</span>The size of the update scales with the error. A prediction that is nearly correct barely moves the knobs; a wildly wrong one yanks them hard. The algorithm listens loudest to its biggest mistakes.</span>
+
+  <p>This is the <span class="term">LMS update rule</span> (least mean squares), and it has an almost physical intuition: the correction to each parameter is proportional to the error times the input. Big error, big fix. Small error, leave it alone.</p>
+
+  <p>There are two ways to run this over a full dataset. <span class="term">Batch gradient descent</span> looks at every example before taking a single step — accurate, but slow to get moving when \(n\) is large. <span class="term">Stochastic gradient descent</span> updates after each individual example, so it starts making progress immediately and usually gets close to the minimum far faster, even if it never quite settles and instead jitters around the bottom forever. For large datasets, that trade is almost always worth it.</p>
+
+  <p>One mercy specific to linear regression: \(J\) is a convex bowl. There are no false valleys to get trapped in, so gradient descent — with a sane learning rate — always finds the one true global minimum.</p>
+</section>
+
+<section>
+  <h2><span class="num">3</span>Solving it in one shot</h2>
+  <p class="kicker">The normal equations</p>
+
+  <p>Gradient descent inches toward the answer. But for linear regression we can skip the walk entirely and jump straight to the bottom, because we can write the minimum in closed form. Stack all the inputs as rows of a <span class="term">design matrix</span> \(X\), stack the targets into a vector \(\vec{y}\), and the cost becomes a single clean expression:</p>
+
+  \[ J(\theta) = \tfrac{1}{2}(X\theta - \vec{y})^\top (X\theta - \vec{y}) \]
+
+  <p>Differentiate, set to zero, and out come the <span class="term">normal equations</span>:</p>
+
+  \[ X^\top X\,\theta = X^\top \vec{y} \qquad\Longrightarrow\qquad \theta = (X^\top X)^{-1} X^\top \vec{y} \]
+
+  <p>No iteration, no learning rate — just one matrix computation. (The catch: it needs \(X^\top X\) to be invertible, which fails if features are redundant or there are fewer examples than features.) But the interesting part isn't the formula. It's a small mystery buried in the derivation, one that took me an embarrassingly long time to make peace with.</p>
+</section>
+
+<section>
+  <h2><span class="num">4</span>The transpose puzzle</h2>
+  <p class="kicker">Gradient vs. Jacobian, and why \(X\) flips to \(X^\top\)</p>
+
+  <p>When you differentiate \(X\theta\) and a transpose appears — turning \(X\) into \(X^\top\) — it looks like a bookkeeping trick. It is not. It is telling you something about the difference between two directions of flow.</p>
+
+  <p>Start with the distinction the derivative itself blurs. The <span class="term">Jacobian</span> of a function is the derivative of an output vector with respect to an input vector — it answers "if I nudge the inputs, how do the outputs move?" It points <em>outward</em>, from you to the world. The <span class="term">gradient</span> answers the reverse question — "the cost changed; how much is each input to blame?" — and it points <em>inward</em>, from the world back to you.</p>
+
+  <span class="sidenote"><span class="sn-lab">the seesaw</span>Push down one end, the other end rises. Your push went one way; the effect came back the other way. Same plank, opposite directions. \(X\) is the push; \(X^\top\) is the response coming home.</span>
+
+  <p>Here is the picture that finally made it click. Think of the parameters as fingers and the outputs as the limbs of a marionette, with strings between them whose strengths are the entries of \(X\). To ask "how does one output move?" you sit at a limb and gather every string coming <em>into</em> it — you read <em>across a row</em> of \(X\). But to ask "how much does one finger matter?" you sit at that finger and gather every string <em>leaving</em> it — and because a single parameter is tied to many outputs at once, that means reading <em>down a column</em>.</p>
+
+  <div class="idea"><span class="lab">the whole transpose, in one line</span>The strings never change. What changes is which end you stand at. Reading from the outputs gives rows — that is \(X\). Reading the same strings from the parameters gives columns — and writing those columns back down as usable rows is exactly the transpose, \(X^\top\).</div>
+
+  <p>So influence flows forward along \(X\), and blame flows backward along \(X^\top\). If that sounds like the forward pass and backward pass of backpropagation, it is — least squares is just the one-layer version of the same asymmetry. The transpose is the price of a single input touching many outputs.</p>
+</section>
+
+<section>
+  <h2><span class="num">5</span>Why squared error, of all things?</h2>
+  <p class="kicker">The probabilistic interpretation of LMS</p>
+
+  <p>We chose squared error because it felt reasonable. But "felt reasonable" is not a justification, and it is worth asking whether something deeper endorses it. Something does.</p>
+
+  <p>Suppose the true relationship is linear but corrupted by noise, and the noise is Gaussian — small errors common, large ones rare, symmetric around zero:</p>
+
+  \[ y^{(i)} = \theta^\top x^{(i)} + \epsilon^{(i)}, \qquad \epsilon^{(i)} \sim \mathcal{N}(0, \sigma^2) \]
+
+  <span class="sidenote"><span class="sn-lab">two words that get confused</span>A <em>probability</em> reads forward: parameters fixed, how likely is this data? A <em>likelihood</em> reads backward: data fixed, how well does this \(\theta\) explain it? Same expression, opposite thing held still — the transpose idea again, in disguise.</span>
+
+  <p>Then each target is Gaussian-distributed around the line. The <span class="term">likelihood</span> \(L(\theta)\) is the probability of the whole dataset viewed as a function of \(\theta\), and the <span class="term">principle of maximum likelihood</span> says: pick the \(\theta\) that makes the data we actually saw as unsurprising as possible. Taking logs to turn the product into a sum, the log-likelihood is</p>
+
+  \[ \ell(\theta) = n\log\frac{1}{\sqrt{2\pi}\,\sigma} - \frac{1}{\sigma^2}\cdot\frac{1}{2}\sum_{i=1}^{n}\bigl(y^{(i)} - \theta^\top x^{(i)}\bigr)^2 \]
+
+  <p>Maximizing this means minimizing that sum on the right — which is exactly \(J(\theta)\). Squared error was never arbitrary. It is what you get, automatically, the moment you assume the noise is Gaussian. And notice \(\sigma^2\) drops out of the answer entirely: the best-fit line does not care how big the noise is, only that it is Gaussian.</p>
+</section>
+
+<section>
+  <h2><span class="num">6</span>Letting the data bend the line</h2>
+  <p class="kicker">Locally weighted regression &amp; the non-parametric idea</p>
+
+  <p>A straight line is often too rigid. One fix is to let the fit be <em>local</em>: to predict at a query point \(x\), fit a line that mostly cares about the training points near \(x\) and ignores the far ones. That is <span class="term">locally weighted regression</span>, and it just adds a weight to each term of the cost:</p>
+
+  \[ \text{minimize } \sum_i w^{(i)}\bigl(y^{(i)} - \theta^\top x^{(i)}\bigr)^2, \qquad w^{(i)} = \exp\!\left(-\frac{(x^{(i)} - x)^2}{2\tau^2}\right) \]
+
+  <p>Points near the query get weight close to 1; distant points get weight near 0 and drop out of the fit. The <span class="term">bandwidth</span> \(\tau\) sets how quickly that falloff happens. Stitch together the local answer at every query point and you trace a curve that bends to follow the data, even though every individual fit was a straight line.</p>
+
+  <span class="sidenote"><span class="sn-lab">the honest cost</span>Every prediction re-fits from scratch, so there is no trained model to save — you must keep the whole training set forever. Roughly one full regression per query. Lovely on small data; punishing at scale.</span>
+
+  <p>The loop here runs over <em>queries</em>, not over training points — a subtle thing worth getting right. And it makes this our first <span class="term">non-parametric</span> method: unlike ordinary regression, which fits a fixed \(\theta\) once and then discards the data, here the amount you must remember grows with the training set. The model <em>is</em> the data. That flexibility is real, but so is the price — the work moves from training time to query time and never leaves.</p>
+</section>
+
+<section>
+  <h2><span class="num">7</span>From lines to labels</h2>
+  <p class="kicker">Logistic regression</p>
+
+  <p>Now switch to classification, where \(y\) is 0 or 1. Using a straight line is absurd here — nothing stops it predicting 7 or \(-3\). We need to squeeze the output into \([0,1]\), so we pass the linear score through the <span class="term">sigmoid</span>:</p>
+
+  \[ h_\theta(x) = g(\theta^\top x) = \frac{1}{1 + e^{-\theta^\top x}}, \qquad g(z) = \frac{1}{1+e^{-z}} \]
+
+  <p>Now \(h_\theta(x)\) reads as a probability that \(y = 1\). To fit it, we reuse the machine from section 5: write down the likelihood and maximize it. The sigmoid has a famously tidy derivative, \(g'(z) = g(z)(1 - g(z))\), and when you push it through the log-likelihood, the gradient ascent update simplifies to something startling:</p>
+
+  \[ \theta_j := \theta_j + \alpha\bigl(y^{(i)} - h_\theta(x^{(i)})\bigr)\,x_j^{(i)} \]
+
+  <div class="idea"><span class="lab">look closely</span>This is character-for-character the LMS rule from section 2 — for a completely different model, a different loss, a different problem. That is not a coincidence. It is the first hint of a hidden structure we will name in section 10.</div>
+</section>
+
+<section>
+  <h2><span class="num">8</span>A brief historical detour</h2>
+  <p class="kicker">The perceptron</p>
+
+  <p>Replace the smooth sigmoid with a hard threshold — output 1 if the score is nonnegative, 0 otherwise — and keep the same update rule, and you have the <span class="term">perceptron</span>. In the 1960s it was pitched as a crude model of a neuron, and it is the ancestor of everything with the word "network" in it.</p>
+
+  <p>But it is a genuinely different animal from what came before. Because its output is a hard step rather than a probability, you cannot endow its predictions with a clean probabilistic meaning or derive it as maximum likelihood. It looks cosmetically similar and is fundamentally not the same — a useful reminder that a matching update rule does not imply a matching justification.</p>
+</section>
+
+<section>
+  <h2><span class="num">9</span>Jumping instead of walking</h2>
+  <p class="kicker">Newton's method</p>
+
+  <p>Gradient descent only feels the slope, so it shuffles downhill guessing how far to step. <span class="term">Newton's method</span> feels the <em>curvature</em> too, and that extra information lets it be far bolder. Originally it is a way to find where a function hits zero:</p>
+
+  \[ \theta := \theta - \frac{f(\theta)}{f'(\theta)} \]
+
+  <p>To <em>optimize</em>, note that a maximum is just a place where the derivative is zero — so apply the root-finder to \(\ell'\):</p>
+
+  \[ \theta := \theta - \frac{\ell'(\theta)}{\ell''(\theta)} \]
+
+  <span class="sidenote"><span class="sn-lab">the picture</span>Gradient descent fits a <em>line</em> and takes a cautious step. Newton fits a <em>parabola</em> using slope and curvature, then leaps straight to that parabola's lowest point. Sharp curve, short leap; gentle curve, long leap — the curvature sizes the jump for you.</span>
+
+  <p>Read the update physically: the slope says which way and how steep, and the curvature \(\ell''\) scales the step — big curvature shrinks it, small curvature stretches it. For many parameters, the slope becomes the gradient and the curvature becomes the <span class="term">Hessian</span> matrix \(H\):</p>
+
+  \[ \theta := \theta - H^{-1}\nabla_\theta \ell(\theta) \]
+
+  <p>When the target is genuinely bowl-shaped, Newton is dazzling — it roughly doubles the number of correct digits each step and finishes in a handful of iterations. The cost is the Hessian: it is \(d \times d\), and inverting it runs about \(O(d^3)\). For a logistic regression with a few features that is a bargain, which is exactly why the lecture introduces it here. For a model with millions of parameters it is hopeless, which is why the whole modern optimization literature is a hunt for ways to steal Newton's idea — use curvature to size the step — while paying almost nothing for it.</p>
+</section>
+
+<section>
+  <h2><span class="num">10</span>The pattern behind everything</h2>
+  <p class="kicker">Generalized linear models</p>
+
+  <p>We now have two models that suspiciously share an update rule. The reason is that both are instances of one recipe. Start with the <span class="term">exponential family</span> — a broad class of distributions writable in a single form:</p>
+
+  \[ p(y;\eta) = b(y)\exp\!\bigl(\eta^\top T(y) - a(\eta)\bigr) \]
+
+  <p>Here \(\eta\) is the <span class="term">natural parameter</span>, \(T(y)\) the sufficient statistic, and \(a(\eta)\) the log-partition function that keeps everything normalized. The Gaussian lives inside this form. So does the Bernoulli — and when you rewrite the Bernoulli this way, its natural parameter is \(\eta = \log\frac{\phi}{1-\phi}\), which inverts to give \(\phi = 1/(1+e^{-\eta})\). The sigmoid was not pulled from a hat. It <em>falls out</em> of assuming a binary outcome.</p>
+
+  <p>A <span class="term">generalized linear model</span> is then three design choices:</p>
+
+  <p><strong>One.</strong> Given \(x\), the output \(y\) follows some exponential-family distribution. <strong>Two.</strong> We predict its expected value, \(h(x) = \mathbb{E}[y \mid x]\). <strong>Three.</strong> The natural parameter is linear in the inputs: \(\eta = \theta^\top x\).</p>
+
+  <div class="idea"><span class="lab">the whole lecture, compressed</span>Pick the distribution that fits your output — Gaussian for continuous values, Bernoulli for binary, multinomial for categories — and the rest of the model builds itself: the hypothesis, the link, the loss, the shared update rule.</div>
+
+  <p>Choose the Gaussian and you recover ordinary least squares. Choose the Bernoulli and you recover logistic regression. Choose the multinomial — a distribution over \(k\) categories — and you get <span class="term">softmax regression</span>, whose response function generalizes the sigmoid:</p>
+
+  \[ p(y = i \mid x;\theta) = \frac{e^{\theta_i^\top x}}{\sum_{j=1}^{k} e^{\theta_j^\top x}} \]
+
+  <p>That shared update rule from sections 2 and 7 was never a coincidence. It is a property of the whole family — the same skeleton showing through three different skins.</p>
+</section>
+
+<hr class="soft">
+
+<p>So the first lecture is not a warm-up after all. It quietly assembles the entire logic of the course: a hypothesis, a cost that a probabilistic story secretly endorses, two ways to minimize it, a glimpse of what curvature buys you, and finally the realization that regression and classification were the same construction all along. The straight line was just the doorway.</p>
+
+<footer>
+  <span class="pen">CS229 · Lecture 1</span> — supervised learning → linear regression → normal equations → the transpose puzzle → probabilistic view → locally weighted regression → logistic regression → perceptron → Newton's method → generalized linear models.<br><br>
+  Written up from my own lecture notes, with intuition first and the algebra kept honest.
+</footer>
+
+</article>
+</div>
+</body>
+</html>
