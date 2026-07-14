@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modelling the world instead of the border — CS229 Lecture 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+  chtml: { scale: 1.0 },
+  options: { renderActions: { addMenu: [] } }
+};
+</script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+<style>
+  :root{
+    --paper:#FBFAF6;
+    --ink:#1B1B18;
+    --ink-soft:#57544C;
+    --ink-faint:#8A877D;
+    --pen:#C4142A;
+    --pen-soft:rgba(196,20,42,0.07);
+    --rule:rgba(27,27,24,0.14);
+    --grid:rgba(27,27,24,0.045);
+    --maxcol:700px;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:26px 26px;
+    color:var(--ink);
+    font-family:'Newsreader', Georgia, serif;
+    font-size:20px;
+    line-height:1.66;
+    font-weight:400;
+  }
+  .wrap{max-width:964px;margin:0 auto;padding:0 32px 120px;}
+
+  .backlink{
+    max-width:var(--maxcol);margin:0 auto;padding:26px 0 0;
+    font-family:'JetBrains Mono', monospace;font-size:13px;letter-spacing:0.02em;
+  }
+  .backlink a{color:var(--ink-faint);border:none;}
+  .backlink a:hover{color:var(--pen);}
+
+  /* ---------- header ---------- */
+  header.masthead{
+    max-width:var(--maxcol);
+    margin:0 auto;
+    padding:40px 0 40px;
+    border-bottom:1px solid var(--rule);
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    letter-spacing:0.22em;
+    text-transform:uppercase;
+    color:var(--pen);
+    font-weight:500;
+    margin:0 0 26px;
+  }
+  h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:500;
+    font-size:50px;
+    line-height:1.05;
+    letter-spacing:-0.02em;
+    margin:0 0 22px;
+  }
+  .dek{
+    font-size:21px;
+    color:var(--ink-soft);
+    line-height:1.5;
+    margin:0 0 30px;
+    font-weight:400;
+  }
+  .meta{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    letter-spacing:0.04em;
+    color:var(--ink-faint);
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  .meta .dot{width:3px;height:3px;border-radius:50%;background:var(--ink-faint);display:inline-block;}
+
+  /* ---------- article ---------- */
+  article{
+    max-width:var(--maxcol);
+    margin:0 auto;
+    padding-top:8px;
+  }
+  article p{margin:0 0 22px;}
+  .lede{font-size:22px;line-height:1.55;margin-top:38px;}
+  .lede::first-letter{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    float:left;
+    font-size:70px;
+    line-height:0.82;
+    padding:6px 12px 0 0;
+    color:var(--pen);
+  }
+
+  section{margin-top:56px;}
+  h2{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:500;
+    font-size:29px;
+    line-height:1.15;
+    letter-spacing:-0.01em;
+    margin:0 0 8px;
+    display:flex;
+    align-items:baseline;
+    gap:16px;
+  }
+  .num{
+    flex:none;
+    font-family:'JetBrains Mono', monospace;
+    font-size:15px;
+    font-weight:500;
+    color:var(--pen);
+    border:1.5px solid var(--pen);
+    border-radius:50%;
+    width:34px;height:34px;
+    display:inline-flex;
+    align-items:center;justify-content:center;
+    transform:translateY(2px);
+  }
+  h2 + .kicker{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    margin:0 0 24px 50px;
+  }
+  h3{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:500;
+    font-size:20px;
+    letter-spacing:0.01em;
+    margin:38px 0 6px;
+  }
+
+  .term{
+    border-bottom:2px solid var(--pen);
+    padding-bottom:0.5px;
+    font-weight:500;
+  }
+  strong{font-weight:500;}
+  em{font-style:italic;}
+
+  code, .mono{font-family:'JetBrains Mono', monospace;font-size:0.82em;}
+
+  .idea{
+    margin:34px 0;
+    padding:4px 0 4px 26px;
+    border-left:3px solid var(--pen);
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:400;
+    font-size:23px;
+    line-height:1.4;
+    letter-spacing:-0.01em;
+  }
+  .idea .lab{
+    display:block;
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color:var(--pen);
+    margin-bottom:10px;
+    font-weight:500;
+  }
+
+  .sidenote{
+    float:right;
+    clear:right;
+    width:196px;
+    margin:6px -232px 22px 0;
+    font-family:'Newsreader', serif;
+    font-size:15.5px;
+    line-height:1.5;
+    color:var(--ink-soft);
+    border-top:2px solid var(--pen);
+    padding-top:10px;
+  }
+  .sidenote .sn-lab{
+    display:block;
+    font-family:'JetBrains Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--pen);
+    margin-bottom:6px;
+  }
+
+  mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%;}
+  mjx-container[display="true"]{margin:26px 0 !important;}
+
+  hr.soft{border:none;border-top:1px solid var(--rule);margin:56px 0;}
+
+  /* small comparison table, styled like a margin jotting */
+  table.cmp{
+    width:100%;border-collapse:collapse;margin:30px 0;
+    font-size:16.5px;
+  }
+  table.cmp th, table.cmp td{
+    text-align:left;padding:11px 14px;border-bottom:1px solid var(--rule);
+    vertical-align:top;
+  }
+  table.cmp th{
+    font-family:'JetBrains Mono', monospace;font-size:12px;letter-spacing:0.06em;
+    text-transform:uppercase;color:var(--ink-faint);font-weight:500;
+  }
+  table.cmp td:first-child{font-weight:500;font-family:'Space Grotesk',sans-serif;font-size:15px;width:34%;}
+
+  footer{
+    max-width:var(--maxcol);
+    margin:80px auto 0;
+    padding-top:28px;
+    border-top:1px solid var(--rule);
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    color:var(--ink-faint);
+    line-height:1.7;
+  }
+  footer .pen{color:var(--pen);}
+
+  a{color:var(--pen);text-decoration:none;border-bottom:1px solid rgba(196,20,42,0.35);}
+
+  @media (max-width:900px){
+    .sidenote{
+      float:none;width:auto;margin:24px 0;
+      border-top:none;border-left:3px solid var(--pen);
+      padding:2px 0 2px 18px;
+    }
+  }
+  @media (max-width:620px){
+    body{font-size:18px;}
+    .wrap{padding:0 20px 90px;}
+    header.masthead{padding:32px 0 32px;}
+    h1{font-size:36px;}
+    .dek{font-size:19px;}
+    .lede::first-letter{font-size:58px;}
+    h2{font-size:25px;gap:12px;}
+    .num{width:30px;height:30px;font-size:14px;}
+    h2 + .kicker{margin-left:42px;}
+    .idea{font-size:20px;}
+    table.cmp td:first-child{width:40%;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<p class="backlink"><a href="index.html">← CS229 notes</a></p>
+
+<header class="masthead">
+  <p class="eyebrow">Stanford CS229 · Lecture Two</p>
+  <h1>Modelling the world instead of the border</h1>
+  <p class="dek">Last time we drew lines between classes. This time we do something stranger and, in a sense, more ambitious — we model what each class actually looks like, and let the boundary fall out on its own. Gaussian discriminant analysis, Naive Bayes, and the generative–discriminative split that runs under all of it.</p>
+  <div class="meta">
+    <span>Notes from CS229</span>
+    <span class="dot"></span>
+    <span>~16 min read</span>
+    <span class="dot"></span>
+    <span>generative learning</span>
+  </div>
+</header>
+
+<article>
+
+<p class="lede">Everything in the first lecture was about one move: given the inputs, predict the label. Logistic regression, the perceptron — all of them go straight for \(p(y\mid x)\), the probability of the label given what you see. They learn a border and check which side you fall on. This lecture asks a genuinely different question, and I found the shift in mindset more interesting than any single algorithm in it.</p>
+
+<p>Suppose I want to tell elephants from dogs. The discriminative instinct is to find the dividing line between them. The <em>generative</em> instinct is to ignore the line entirely: build a model of what elephants look like, build a separate model of what dogs look like, and when a new animal walks in, ask which model it resembles more. No border is drawn on purpose — you describe each class fully and let the comparison decide.</p>
+
+<section>
+  <h2><span class="num">1</span>Two ways to answer the same question</h2>
+  <p class="kicker">Discriminative vs. generative</p>
+
+  <p>The distinction comes down to <em>what you bother to model</em>. Discriminative algorithms learn \(p(y\mid x)\) directly. Generative algorithms learn \(p(x\mid y)\) — the distribution of the features <em>within</em> each class — together with the class prior \(p(y)\), and then flip them around with Bayes' rule:</p>
+
+  \[ p(y\mid x) = \frac{p(x\mid y)\,p(y)}{p(x)} \]
+
+  <span class="sidenote"><span class="sn-lab">a small mercy</span>You never actually compute \(p(x)\). It's the same for every class, so it can't change which one wins the \(\arg\max\). Modelling the pieces is enough.</span>
+
+  <p>Here is the part I like. To make a prediction you only need to know which class scores highest, and the denominator \(p(x)\) does not depend on \(y\) — so it just drops out:</p>
+
+  \[ \arg\max_y \; p(y\mid x) \;=\; \arg\max_y \; p(x\mid y)\,p(y) \]
+
+  <p>So a generative model does something almost extravagant: it learns the full joint \(p(x, y)\), enough to <em>generate</em> fake data from either class. That is far more than classification strictly requires — for just drawing a boundary, it's overkill, and if your assumptions about \(p(x\mid y)\) are wrong, that extra structure can hurt you. But when the assumptions fit, knowing the whole story of each class is a real advantage. That tension is the whole lecture.</p>
+</section>
+
+<section>
+  <h2><span class="num">2</span>Fitting a bell curve to each class</h2>
+  <p class="kicker">Gaussian discriminant analysis</p>
+
+  <p>The first generative model is <span class="term">GDA</span>, and it makes a clean assumption: within each class, the features are multivariate Gaussian. Recall the multivariate normal in \(d\) dimensions, with mean vector \(\mu\) and covariance matrix \(\Sigma\):</p>
+
+  \[ p(x;\mu,\Sigma) = \frac{1}{(2\pi)^{d/2}|\Sigma|^{1/2}}\exp\!\left(-\tfrac{1}{2}(x-\mu)^\top \Sigma^{-1}(x-\mu)\right) \]
+
+  <p>Picture it as a hill: \(\mu\) says where the peak sits, and \(\Sigma\) sets the shape of the contours — a big \(\Sigma\) spreads the bell out, off-diagonal terms tilt and squeeze it into ellipses along a diagonal. GDA fits one such bell to each class:</p>
+
+  \[ y \sim \text{Bernoulli}(\phi), \qquad x\mid y=0 \sim \mathcal{N}(\mu_0, \Sigma), \qquad x\mid y=1 \sim \mathcal{N}(\mu_1, \Sigma) \]
+
+  <span class="sidenote"><span class="sn-lab">why one \(\Sigma\), not two</span>Sharing the covariance is what keeps the boundary a straight line. Give each class its own \(\Sigma\) and the two bells have different shapes — the boundary bends into a curve (that's the quadratic version, QDA).</span>
+
+  <p>The one thing worth pausing on: both classes share a single covariance \(\Sigma\), but keep separate means \(\mu_0, \mu_1\). Two bells of identical shape and orientation, sitting at different locations. Maximum likelihood gives exactly the estimates you'd guess if you just trusted your intuition:</p>
+
+  \[ \phi = \frac{1}{n}\sum_{i=1}^{n}\mathbf{1}\{y^{(i)}=1\}, \qquad \mu_k = \frac{\sum_i \mathbf{1}\{y^{(i)}=k\}\,x^{(i)}}{\sum_i \mathbf{1}\{y^{(i)}=k\}} \]
+
+  <p>\(\phi\) is just the fraction of positive examples; each \(\mu_k\) is just the average of the points in that class. The shared covariance is the average spread pooled across both. Nothing exotic — you're literally fitting the centre and shape of each cloud. And because the two bells share a shape, the boundary where \(p(y=1\mid x)=0.5\) comes out as a straight line.</p>
+</section>
+
+<section>
+  <h2><span class="num">3</span>The twist: GDA secretly contains logistic regression</h2>
+  <p class="kicker">When to trust which</p>
+
+  <p>Here is the result that made me sit up. Take the GDA model and, treating \(p(y=1\mid x)\) as a function of \(x\), grind through the algebra. What falls out is:</p>
+
+  \[ p(y=1\mid x) = \frac{1}{1 + \exp(-\theta^\top x)} \]
+
+  <p>That is <em>exactly</em> the logistic function — the discriminative model from last lecture — with \(\theta\) built out of \(\phi, \Sigma, \mu_0, \mu_1\). So assuming Gaussian classes with shared covariance <em>forces</em> the posterior to be logistic.</p>
+
+  <div class="idea"><span class="lab">the asymmetry that matters</span>GDA being Gaussian implies the posterior is logistic. But logistic does <em>not</em> imply the classes are Gaussian — plenty of other distributions (Poisson, for one) also produce a logistic posterior. GDA is the stronger claim.</div>
+
+  <p>That one-way implication tells you everything about the trade-off. GDA assumes more, so when the data really is Gaussian it squeezes more out of every example — it's <span class="term">asymptotically efficient</span>, meaning with enough data no method beats it, and it tends to need less data to get there. But bet on Gaussian when the data isn't, and you pay for it. Logistic regression assumes almost nothing about \(p(x\mid y)\), so it's harder to mislead:</p>
+
+  <table class="cmp">
+    <tr><th></th><th>Assumptions</th><th>Data efficiency</th><th>Robustness</th></tr>
+    <tr><td>GDA (generative)</td><td>Strong — Gaussian classes</td><td>High, if assumptions hold</td><td>Low</td></tr>
+    <tr><td>Logistic (discriminative)</td><td>Weak</td><td>Lower</td><td>High</td></tr>
+  </table>
+
+  <p>My takeaway: reach for the generative model when you genuinely believe the story it tells about your data, or when data is scarce and you need the assumptions to do some of the work. Reach for the discriminative one when you'd rather not commit to a story at all. In practice, because real data rarely obeys a clean Gaussian, logistic regression gets used more.</p>
+</section>
+
+<section>
+  <h2><span class="num">4</span>The gloriously wrong assumption that works</h2>
+  <p class="kicker">Naive Bayes</p>
+
+  <p>GDA wanted continuous features. Now flip to discrete ones — the canonical example being a spam filter. Represent an email as a vector over the vocabulary: \(x_j = 1\) if word \(j\) appears, \(0\) otherwise. With a 50,000-word dictionary, \(x\) lives in \(\{0,1\}^{50000}\), and modelling the full joint over that would need about \(2^{50000}\) parameters. Hopeless.</p>
+
+  <span class="sidenote"><span class="sn-lab">naive, and proud</span>"buy" and "price" obviously co-occur in spam, so the independence assumption is just false. Naive Bayes assumes it anyway — and still classifies well. A good reminder that a model can be wrong and useful at once.</span>
+
+  <p>So Naive Bayes makes an assumption that is, frankly, false — but liberating. It assumes every word is <span class="term">conditionally independent</span> of every other, given the class. Knowing an email is spam, whether "buy" appears tells you nothing about whether "price" appears. That collapses the joint into a simple product:</p>
+
+  \[ p(x_1, \dots, x_d \mid y) = \prod_{j=1}^{d} p(x_j \mid y) \]
+
+  <p>And the maximum-likelihood parameters are, again, just counting:</p>
+
+  \[ \phi_{j\mid y=1} = \frac{\sum_i \mathbf{1}\{x_j^{(i)}=1 \wedge y^{(i)}=1\}}{\sum_i \mathbf{1}\{y^{(i)}=1\}} \]
+
+  <p>In words: \(\phi_{j\mid y=1}\) is the fraction of spam emails that contain word \(j\). That's it. The assumption is a lie, the arithmetic is trivial, and the classifier is a genuinely strong first thing to try.</p>
+</section>
+
+<section>
+  <h2><span class="num">5</span>The zero that breaks everything</h2>
+  <p class="kicker">Laplace smoothing</p>
+
+  <p>There's a failure mode hiding in that counting, and it's worth seeing clearly. Say a new word shows up — "neurips", never once in your training set. Its estimated probability in <em>both</em> classes is a hard zero:</p>
+
+  \[ \phi_{\text{neurips}\mid y=1} = 0, \qquad \phi_{\text{neurips}\mid y=0} = 0 \]
+
+  <p>Now the prediction multiplies all the per-word probabilities together, and a single zero annihilates the whole product — in both the numerator and denominator. You get \(0/0\), and the classifier simply cannot answer. One unseen word and it's paralysed.</p>
+
+  <div class="idea"><span class="lab">the real lesson</span>It's statistically reckless to call something impossible just because you haven't seen it yet. A finite training set is not the whole world.</div>
+
+  <p>The fix — <span class="term">Laplace smoothing</span> — is almost embarrassingly simple: pretend you've seen every outcome one extra time. For a variable with \(k\) possible values,</p>
+
+  \[ \phi_j = \frac{1 + \sum_i \mathbf{1}\{z^{(i)}=j\}}{k + n} \]
+
+  <p>Add 1 to each numerator, add \(k\) to the denominator so the probabilities still sum to one. No estimate can be zero anymore. For the spam filter's binary words that's \((1 + \text{count})/(2 + \text{count})\).</p>
+
+  <span class="sidenote"><span class="sn-lab">worth remembering</span>This is the same trick as initialising probabilities uniformly before you've seen data — a uniform prior nudging every count off the floor. It keeps showing up under different names.</span>
+
+  <p>The way I think about it now: smoothing is a uniform prior in disguise. Before the data speaks, you assume every outcome is equally (im)plausible, and the counts only pull you away from that flat starting belief. That framing turns a hack into something principled — and it's the same idea that reappears anywhere a model has to guess about things it has never observed.</p>
+</section>
+
+<section>
+  <h2><span class="num">6</span>Presence vs. counts</h2>
+  <p class="kicker">Event models for text</p>
+
+  <p>One last refinement, specific to text. The Naive Bayes above uses the <span class="term">Bernoulli event model</span>: for each word in the dictionary, flip a coin for whether it appears. It only records <em>presence</em> — did "free" show up, yes or no — and throws away how many times.</p>
+
+  <p>The <span class="term">multinomial event model</span> changes the story of how an email is written. Instead of one presence/absence flip per dictionary word, you draw each actual word position from a distribution over the vocabulary — so a word appearing five times counts five times. It records <em>frequency</em>, not just presence:</p>
+
+  \[ p(\text{email}) = p(y)\prod_{j=1}^{d} p(x_j \mid y) \]
+
+  <p>The formula looks like before, but the terms mean something different now — each \(x_j\) is a word identity drawn from a multinomial, not a yes/no flag. For text, this does better, because how often a word appears carries real signal that presence-only throws away. (Both still need Laplace smoothing, now adding \(|V|\) to the denominator, for the same zero-probability reason as before.)</p>
+</section>
+
+<hr class="soft">
+
+<p>So the through-line of this lecture isn't really GDA or Naive Bayes — it's the choice underneath them. You can model the boundary directly and stay agnostic about everything else, or you can model each class in full and let the boundary emerge. The generative route asks you to tell a story about your data; when the story is true it rewards you richly, and when it's false it costs you. Everything here — the shared covariance, the naive independence, even the little smoothing trick — is just a decision about how much of that story you're willing to commit to.</p>
+
+<footer>
+  <span class="pen">CS229 · Lecture 2</span> — generative vs. discriminative → Bayes' rule → Gaussian discriminant analysis → the GDA/logistic link → Naive Bayes → Laplace smoothing → Bernoulli vs. multinomial event models.<br><br>
+  Written up from my own notes, intuition first and the algebra kept honest.
+</footer>
+
+</article>
+</div>
+</body>
+</html>
