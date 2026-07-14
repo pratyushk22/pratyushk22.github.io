@@ -81,6 +81,25 @@
 
   footer{text-align:center;color:#aaa;font-size:13px;padding:40px 0 50px}
   hr.div{border:none;border-top:1px solid var(--line);margin:0}
+
+    /* nav dropdown */
+  nav .dropdown{position:relative;display:inline-block;margin-left:22px}
+  .drop-toggle{
+    font-family:inherit;font-size:15px;color:var(--soft);
+    background:none;border:none;cursor:pointer;padding:0;line-height:inherit;
+  }
+  .drop-toggle:hover{color:var(--link)}
+  nav .drop-menu{
+    display:none;position:absolute;top:calc(100% + 10px);left:0;
+    min-width:150px;background:#fff;border:1px solid var(--line);
+    border-radius:6px;box-shadow:0 8px 22px rgba(0,0,0,.08);padding:5px;z-index:50;
+  }
+  nav .dropdown.open .drop-menu{display:block}
+  nav .drop-menu a{
+    display:block;margin:0;padding:8px 11px;border-radius:4px;
+    font-size:14.5px;color:var(--fg);
+  }
+  nav .drop-menu a:hover{background:var(--chip);color:var(--link);text-decoration:none}
 </style>
 </head>
 <body>
@@ -88,11 +107,17 @@
 <header class="top">
   <div class="wrap">
     <a class="name" href="#">Pratyush</a>
-    <nav>
-      <a href="https://arrow-rain-66d.notion.site/Blogs-3795ef281b9b80dea51bd799755e6155" target="_blank">Blogs</a>
-      <a href="#projects">Projects</a>
-      <a href="#">Resume</a>
-    </nav>
+      <nav>
+        <span class="dropdown" id="blogsDrop">
+          <button class="drop-toggle" aria-haspopup="true" aria-expanded="false">Blogs ▾</button>
+          <span class="drop-menu" role="menu">
+            <a role="menuitem" href="https://arrow-rain-66d.notion.site/Blogs-3795ef281b9b80dea51bd799755e6155" target="_blank" rel="noopener">Notion</a>
+            <a role="menuitem" href="https://arrow-rain-66d.notion.site/CS229-Machine-Learning-3795ef281b9b80b4abecd0e92363c4a5?source=copy_link" target="_blank" rel="noopener">CS229</a>
+          </span>
+        </span>
+        <a href="#projects">Projects</a>
+        <a href="#">Resume</a>
+      </nav>
   </div>
 </header>
 
@@ -195,5 +220,21 @@
   <footer>© 2026 Pratyush · IIT Guwahati</footer>
 
 </div>
+  <script>
+  (function(){
+    var d=document.getElementById('blogsDrop');
+    var b=d.querySelector('.drop-toggle');
+    b.addEventListener('click',function(e){
+      e.stopPropagation();
+      b.setAttribute('aria-expanded', d.classList.toggle('open'));
+    });
+    document.addEventListener('click',function(){
+      d.classList.remove('open'); b.setAttribute('aria-expanded','false');
+    });
+    document.addEventListener('keydown',function(e){
+      if(e.key==='Escape'){d.classList.remove('open'); b.setAttribute('aria-expanded','false');}
+    });
+  })();
+</script>
 </body>
 </html>
