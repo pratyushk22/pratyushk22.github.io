@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Permission to trust the training set — CS229 Lecture 4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+  chtml: { scale: 1.0 },
+  options: { renderActions: { addMenu: [] } }
+};
+</script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+<style>
+  :root{
+    --paper:#FBFAF6;
+    --ink:#1B1B18;
+    --ink-soft:#57544C;
+    --ink-faint:#8A877D;
+    --pen:#C4142A;
+    --pen-soft:rgba(196,20,42,0.07);
+    --rule:rgba(27,27,24,0.14);
+    --grid:rgba(27,27,24,0.045);
+    --maxcol:700px;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:26px 26px;
+    color:var(--ink);
+    font-family:'Newsreader', Georgia, serif;
+    font-size:20px;
+    line-height:1.66;
+    font-weight:400;
+  }
+  .wrap{max-width:964px;margin:0 auto;padding:0 32px 120px;}
+  .col{max-width:var(--maxcol);position:relative;}
+
+  .backlink{
+    max-width:var(--maxcol);
+    padding:38px 0 0;
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:14px;
+    letter-spacing:0.04em;
+  }
+  .backlink a{color:var(--ink-faint);text-decoration:none;border-bottom:1px solid transparent;}
+  .backlink a:hover{color:var(--pen);border-bottom-color:var(--pen);}
+
+  header{padding:56px 0 10px;}
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--pen);
+  }
+  h1{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:46px;
+    line-height:1.12;
+    font-weight:700;
+    letter-spacing:-0.02em;
+    margin:14px 0 16px;
+  }
+  .standfirst{
+    font-size:21px;
+    color:var(--ink-soft);
+    font-style:italic;
+    margin:0 0 26px;
+  }
+  .byline{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    color:var(--ink-faint);
+    letter-spacing:0.04em;
+    border-top:1px solid var(--rule);
+    padding-top:14px;
+  }
+
+  h2{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:27px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    margin:64px 0 6px;
+    line-height:1.24;
+  }
+  h3{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:19px;
+    font-weight:500;
+    margin:40px 0 4px;
+  }
+  .num{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:1.55em;height:1.55em;
+    border:1.5px solid var(--pen);
+    border-radius:50%;
+    color:var(--pen);
+    font-size:0.62em;
+    font-family:'JetBrains Mono', monospace;
+    vertical-align:0.22em;
+    margin-right:0.5em;
+  }
+  p{margin:1.05em 0;}
+  strong{font-weight:500;color:var(--ink);}
+  em{font-style:italic;}
+  code{
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.84em;
+    background:var(--pen-soft);
+    padding:1px 5px;
+    border-radius:3px;
+  }
+  a{color:var(--ink);text-decoration-color:var(--pen);text-underline-offset:3px;}
+
+  .lede{border-left:2px solid var(--pen);padding-left:18px;margin:26px 0;color:var(--ink-soft);}
+
+  .sn{
+    position:absolute;
+    left:calc(var(--maxcol) + 26px);
+    width:172px;
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:14px;
+    line-height:1.5;
+    color:var(--pen);
+    border-top:1.5px solid var(--pen);
+    padding-top:8px;
+  }
+  .sn b{font-weight:700;display:block;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px;}
+
+  .rule{border:0;border-top:1px solid var(--rule);margin:56px 0;}
+
+  figure{margin:38px 0;}
+  figcaption{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:14px;
+    color:var(--ink-faint);
+    margin-top:10px;
+  }
+
+  .algo{
+    border:1px solid var(--rule);
+    background:rgba(255,255,255,0.55);
+    padding:20px 24px;
+    margin:30px 0;
+    font-size:18.5px;
+  }
+  .algo .tag{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--pen);
+    display:block;
+    margin-bottom:10px;
+  }
+  .algo p:first-of-type{margin-top:0;}
+  .algo p:last-child{margin-bottom:0;}
+
+  .chain{margin:26px 0;}
+  .chain p{margin:0.35em 0;font-size:15px;font-family:'Space Grotesk', system-ui, sans-serif;color:var(--ink-faint);}
+
+  mjx-container[display="true"]{margin:1.2em 0 !important;}
+  mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%;}
+
+  .end{
+    font-family:'JetBrains Mono', monospace;
+    color:var(--pen);
+    font-size:15px;
+    letter-spacing:0.2em;
+    margin-top:56px;
+  }
+
+  @media (max-width:940px){
+    body{font-size:18.5px;}
+    .wrap{padding:0 22px 90px;}
+    h1{font-size:34px;}
+    h2{font-size:23px;}
+    .sn{
+      position:static;
+      width:auto;
+      margin:22px 0;
+      border-top:0;
+      border-left:2px solid var(--pen);
+      padding:2px 0 2px 14px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="backlink"><a href="/cs229/">← CS229 notes</a></div>
+
+  <div class="col">
+  <header>
+    <div class="eyebrow">Lecture 4</div>
+    <h1>Permission to trust the training set</h1>
+    <p class="standfirst">Two lemmas, one theorem, and the moment bias and variance stop being vibes and become two terms on a page.</p>
+    <div class="byline">Pratyush · CS229 · learning theory · ERM · VC dimension</div>
+  </header>
+
+  <p>Every algorithm so far minimises error on the training set. Nobody has explained why that's allowed. The training set is a finite pile of examples you happened to collect; what you actually want is to be right on the ones you'll see tomorrow. The gap between those two things is <strong>generalization error</strong>, and this lecture is about earning the right to ignore it.</p>
+
+  <hr class="rule">
+
+  <h2><span class="num">1</span>Two ways to fail</h2>
+
+  <p>Fit a line to curved data and it stays wrong no matter how much data you pour in. That's <strong>bias</strong> — and note the definition, because it's sharper than the usual hand-waving: bias is the generalization error you'd still have <em>after fitting to an infinitely large training set</em>. It's a limitation of the model class, not of the sample.</p>
+
+  <p>Fit a 5th-order polynomial to the same data and it passes through every point, including the noise. One house happened to be expensive, another happened to be cheap, and the curve dutifully bends to honour both. That's <strong>variance</strong>: you learned the sample instead of the distribution.</p>
+
+  <figure>
+    <svg viewBox="0 0 620 90" width="100%" role="img" aria-label="A spectrum from high bias on the left to high variance on the right, with a sweet spot marked in the middle">
+      <line x1="70" y1="42" x2="550" y2="42" stroke="#1B1B18" stroke-width="1.4"/>
+      <path d="M70,36 l-8,6 l8,6" fill="none" stroke="#1B1B18" stroke-width="1.4"/>
+      <path d="M550,36 l8,6 l-8,6" fill="none" stroke="#1B1B18" stroke-width="1.4"/>
+      <circle cx="310" cy="42" r="6" fill="#C4142A"/>
+      <text x="70" y="72" font-family="'Space Grotesk', sans-serif" font-size="14" fill="#C4142A">high bias · underfit</text>
+      <text x="550" y="72" text-anchor="end" font-family="'Space Grotesk', sans-serif" font-size="14" fill="#C4142A">high variance · overfit</text>
+      <text x="310" y="24" text-anchor="middle" font-family="'Space Grotesk', sans-serif" font-size="14" fill="#1B1B18">fewer features ← → more features</text>
+    </svg>
+    <figcaption>Both ends are large generalization error. They fail for opposite reasons.</figcaption>
+  </figure>
+
+  <p>Both ends are bad, and both are bad in the same currency. So the question becomes: can this picture be made into something you can compute with?</p>
+
+  <hr class="rule">
+
+  <h2><span class="num">2</span>Everything is built from two lemmas</h2>
+
+  <p class="sn"><b>That's the whole toolkit</b>The finite-\(\mathcal{H}\) theory needs nothing else. Concentration for one hypothesis, union bound to cover all of them.</p>
+
+  <p><strong>Union bound.</strong> For events \(A_1,\dots,A_k\), independent or not,</p>
+
+  \[ P(A_1 \cup \cdots \cup A_k) \le P(A_1) + \cdots + P(A_k). \]
+
+  <p><strong>Hoeffding (Chernoff).</strong> Let \(Z_1,\dots,Z_n\) be iid Bernoulli(\(\varphi\)), and \(\hat\varphi = \frac1n\sum_i Z_i\). Then for any \(\gamma>0\),</p>
+
+  \[ P\!\left(\lvert \varphi - \hat\varphi \rvert > \gamma\right) \le 2\exp(-2\gamma^2 n). \]
+
+  <p>Toss a biased coin \(n\) times; the observed fraction of heads is close to the true bias with probability that decays <em>exponentially</em> in \(n\). That exponential is the engine of the whole lecture.</p>
+
+  <hr class="rule">
+
+  <h2><span class="num">3</span>The setup</h2>
+
+  <p>Binary labels, \(y\in\{0,1\}\). Training set \(S\) of size \(n\) drawn iid from a distribution \(\mathcal{D}\), and — this is the assumption everything rests on — the test examples come from that <em>same</em> \(\mathcal{D}\). Then:</p>
+
+  \[ \hat\varepsilon(h) = \frac1n\sum_{i=1}^{n}\mathbb{1}\{h(x^{(i)}) \ne y^{(i)}\}, \qquad \varepsilon(h) = P_{(x,y)\sim\mathcal{D}}\big(h(x)\ne y\big) \]
+
+  <p>Training error is a fraction you can count. Generalization error is a probability you can never observe. The algorithm we study is <strong>empirical risk minimisation</strong> — pick whatever minimises the thing you <em>can</em> see:</p>
+
+  \[ \hat h = \arg\min_{h\in\mathcal{H}} \hat\varepsilon(h) \]
+
+  <p>where \(\mathcal{H}\) is the <strong>hypothesis class</strong>, the set of all classifiers the algorithm is willing to consider. For linear classification \(\mathcal{H} = \{h_\theta : h_\theta(x) = \mathbb{1}\{\theta^Tx \ge 0\}\}\). Abstracting to \(\mathcal{H}\) is what lets the argument apply to linear models and neural nets alike.</p>
+
+  <hr class="rule">
+
+  <h2><span class="num">4</span>Finite \(\mathcal{H}\): from one hypothesis to all of them</h2>
+
+  <p>Say \(\mathcal{H} = \{h_1,\dots,h_k\}\), \(k\) classifiers, that's it.</p>
+
+  <p><strong>Step one — fix a single \(h_i\).</strong> Define \(Z_j = \mathbb{1}\{h_i(x^{(j)}) \ne y^{(j)}\}\). These are iid Bernoulli with mean exactly \(\varepsilon(h_i)\), and their sample mean is exactly \(\hat\varepsilon(h_i)\). So Hoeffding applies verbatim:</p>
+
+  \[ P\!\left(\lvert \varepsilon(h_i) - \hat\varepsilon(h_i)\rvert > \gamma\right) \le 2\exp(-2\gamma^2 n) \]
+
+  <p>Training error is a good estimate of generalization error — for <em>that one</em> hypothesis, fixed in advance.</p>
+
+  <p><strong>Step two — but we search.</strong> ERM doesn't use a hypothesis fixed in advance; it hunts through all \(k\) for the one that looks best on this sample. So we need the estimate to be reliable for every hypothesis <em>simultaneously</em>, or the winner might just be the luckiest. Union bound over the \(k\) bad events:</p>
+
+  \[ P\big(\exists h \in \mathcal{H} : \lvert \varepsilon(h)-\hat\varepsilon(h)\rvert > \gamma\big) \le 2k\exp(-2\gamma^2 n) \]
+
+  <p>Flip it: with probability at least \(1 - 2k\exp(-2\gamma^2 n)\), <em>every</em> \(h\in\mathcal{H}\) has its training error within \(\gamma\) of its true error. That's <strong>uniform convergence</strong>.</p>
+
+  <h3>Three knobs</h3>
+
+  <p class="sn"><b>Logarithmic in \(k\)</b>Doubling the hypothesis class costs one extra example, near enough. This is why the finite bound isn't as useless as \(k\) being astronomically large would suggest.</p>
+
+  <p>There are three quantities — \(n\), \(\gamma\), and the failure probability \(\delta\) — and fixing any two pins the third. Set \(\delta = 2k\exp(-2\gamma^2n)\) and solve for \(n\):</p>
+
+  \[ n \ge \frac{1}{2\gamma^2}\log\frac{2k}{\delta} \]
+
+  <p>This is the <strong>sample complexity</strong>: how much data you need to buy a guarantee. And the shape matters more than the constants — the dependence on \(k\) is <em>logarithmic</em>. Or solve for \(\gamma\) instead, holding \(n\) and \(\delta\):</p>
+
+  \[ \lvert \hat\varepsilon(h) - \varepsilon(h)\rvert \le \sqrt{\frac{1}{2n}\log\frac{2k}{\delta}} \quad \text{for all } h\in\mathcal{H} \]
+
+  <hr class="rule">
+
+  <h2><span class="num">5</span>The three lines</h2>
+
+  <p>Uniform convergence is about estimates being accurate. It doesn't yet say ERM <em>chooses well</em>. Let \(h^\ast = \arg\min_{h\in\mathcal{H}}\varepsilon(h)\) be the genuinely best hypothesis in the class — the thing we'd pick if we were omniscient. Then:</p>
+
+  <div class="chain">
+    \[ \varepsilon(\hat h) \;\le\; \hat\varepsilon(\hat h) + \gamma \;\le\; \hat\varepsilon(h^\ast) + \gamma \;\le\; \varepsilon(h^\ast) + 2\gamma \]
+    <p>uniform convergence · \(\hat h\) minimises \(\hat\varepsilon\) · uniform convergence again</p>
+  </div>
+
+  <p class="sn"><b>The middle step</b>The only place ERM's definition is used. It's one line, and it's the entire justification for minimising training error.</p>
+
+  <p>Read the middle inequality slowly, because it's the one doing the work. \(\hat h\) was <em>chosen</em> to minimise \(\hat\varepsilon\), so \(\hat\varepsilon(\hat h) \le \hat\varepsilon(h^\ast)\) — no probability involved, just the definition of argmin. The outer two steps convert between \(\hat\varepsilon\) and \(\varepsilon\), paying \(\gamma\) each time.</p>
+
+  <p class="lede">ERM is at most \(2\gamma\) worse than the best hypothesis the class contains. Not the best possible classifier — the best <em>available</em> one. \(\mathcal{H}\) is a ceiling nobody can raise from inside.</p>
+
+  <div class="algo">
+    <span class="tag">Theorem (finite \(\mathcal{H}\))</span>
+    <p>With \(\lvert\mathcal{H}\rvert = k\) and probability at least \(1-\delta\),</p>
+    \[ \varepsilon(\hat h) \;\le\; \left(\min_{h\in\mathcal{H}}\varepsilon(h)\right) + 2\sqrt{\frac{1}{2n}\log\frac{2k}{\delta}} \]
+  </div>
+
+  <h3>And there's the tradeoff</h3>
+
+  <p>Now enlarge the class, \(\mathcal{H} \to \mathcal{H}' \supseteq \mathcal{H}\), and watch the two terms move in opposite directions.</p>
+
+  <p>The first term, \(\min_h \varepsilon(h)\), is a minimum over a larger set — it can only <strong>decrease</strong>. That's bias falling. The second term grows with \(k\) — it can only <strong>increase</strong>. That's variance rising.</p>
+
+  <p>Bias and variance aren't two folk intuitions that happen to trade off. They're the two summands of one bound, and switching to a richer model class moves both, always in opposite directions. That's the whole tradeoff, on one line.</p>
+
+  <hr class="rule">
+
+  <h2><span class="num">6</span>Infinite \(\mathcal{H}\)</h2>
+
+  <p>All of that assumed \(k\) is finite. Linear classifiers are parameterised by real numbers, so \(k = \infty\) and \(\log k\) blows up. Every guarantee dies.</p>
+
+  <p>The cheap fix — and it's worth doing precisely because it's wrong in an instructive way: a computer stores a double in 64 bits, so a model with \(d\) parameters really has at most \(k = 2^{64d}\) distinct hypotheses. Plug in:</p>
+
+  \[ n \ge O\!\left(\frac{1}{\gamma^2}\log\frac{2^{64d}}{\delta}\right) = O_{\gamma,\delta}(d) \]
+
+  <p class="sn"><b>Why it's unsatisfying</b>Not the floating point — the parameterisation. The <em>same</em> class of linear classifiers can be written with \(d+1\) parameters or with \(2d+2\), by substituting \(\theta_i = u_i^2 - v_i^2\). A bound that depends on how you wrote the model down isn't measuring the model.</p>
+
+  <p><strong>Sample complexity is linear in the number of parameters.</strong> Which is the right answer, arrived at illegitimately.</p>
+
+  <h3>Shattering and VC dimension</h3>
+
+  <p>The honest version measures the class by what it can <em>do</em>, not how it's written. Say \(\mathcal{H}\) <strong>shatters</strong> a set \(S = \{x^{(1)},\dots,x^{(D)}\}\) if for <em>every</em> one of the \(2^D\) possible labellings, some \(h\in\mathcal{H}\) realises it. Perfect flexibility on those points.</p>
+
+  <p>The <strong>VC dimension</strong> \(\mathrm{VC}(\mathcal{H})\) is the size of the largest set \(\mathcal{H}\) can shatter.</p>
+
+  <figure>
+    <svg viewBox="0 0 620 155" width="100%" role="img" aria-label="Four panels showing three points in general position separated by a line under different labellings, and a fifth panel showing three collinear points that cannot be shattered">
+      <g transform="translate(0,8)">
+        <rect x="0" y="0" width="112" height="115" fill="none" stroke="rgba(27,27,24,0.14)"/>
+        <line x1="2" y1="105" x2="110" y2="100" stroke="#C4142A" stroke-width="1.6"/>
+        <circle cx="28" cy="82" r="5.5" fill="#1B1B18"/><circle cx="84" cy="86" r="5.5" fill="#1B1B18"/><circle cx="54" cy="30" r="5.5" fill="#1B1B18"/>
+      </g>
+      <g transform="translate(127,8)">
+        <rect x="0" y="0" width="112" height="115" fill="none" stroke="rgba(27,27,24,0.14)"/>
+        <line x1="2" y1="62" x2="110" y2="55" stroke="#C4142A" stroke-width="1.6"/>
+        <circle cx="28" cy="82" r="5.5" fill="none" stroke="#1B1B18" stroke-width="1.4"/><circle cx="84" cy="86" r="5.5" fill="none" stroke="#1B1B18" stroke-width="1.4"/><circle cx="54" cy="30" r="5.5" fill="#1B1B18"/>
+      </g>
+      <g transform="translate(254,8)">
+        <rect x="0" y="0" width="112" height="115" fill="none" stroke="rgba(27,27,24,0.14)"/>
+        <line x1="42" y1="2" x2="46" y2="113" stroke="#C4142A" stroke-width="1.6"/>
+        <circle cx="28" cy="82" r="5.5" fill="none" stroke="#1B1B18" stroke-width="1.4"/><circle cx="84" cy="86" r="5.5" fill="#1B1B18"/><circle cx="54" cy="30" r="5.5" fill="#1B1B18"/>
+      </g>
+      <g transform="translate(381,8)">
+        <rect x="0" y="0" width="112" height="115" fill="none" stroke="rgba(27,27,24,0.14)"/>
+        <line x1="70" y1="2" x2="66" y2="113" stroke="#C4142A" stroke-width="1.6"/>
+        <circle cx="28" cy="82" r="5.5" fill="#1B1B18"/><circle cx="84" cy="86" r="5.5" fill="none" stroke="#1B1B18" stroke-width="1.4"/><circle cx="54" cy="30" r="5.5" fill="#1B1B18"/>
+      </g>
+      <g transform="translate(508,8)">
+        <rect x="0" y="0" width="112" height="115" fill="none" stroke="rgba(27,27,24,0.14)" stroke-dasharray="4 4"/>
+        <circle cx="20" cy="60" r="5.5" fill="#1B1B18"/><circle cx="56" cy="60" r="5.5" fill="none" stroke="#1B1B18" stroke-width="1.4"/><circle cx="92" cy="60" r="5.5" fill="#1B1B18"/>
+        <path d="M46,96 l14,14 M60,96 l-14,14" stroke="#C4142A" stroke-width="2"/>
+      </g>
+      <text x="0" y="145" font-family="'Space Grotesk', sans-serif" font-size="13" fill="#8A877D">four of the eight labellings</text>
+      <text x="620" y="145" text-anchor="end" font-family="'Space Grotesk', sans-serif" font-size="13" fill="#8A877D">collinear: impossible</text>
+    </svg>
+    <figcaption>\(\mathrm{VC} = 3\) for lines in the plane. The definition asks only that <em>some</em> set of size 3 be shatterable — the collinear counterexample doesn't count against it. No set of 4 works.</figcaption>
+  </figure>
+
+  <p>The subtlety worth flagging: VC dimension is defined by the <em>best</em> set, not all sets. Three collinear points with alternating labels defeat every line — irrelevant. One shatterable set of size \(D\) is all it takes to prove \(\mathrm{VC}(\mathcal{H}) \ge D\).</p>
+
+  <div class="algo">
+    <span class="tag">Theorem (Vapnik)</span>
+    <p>Let \(D = \mathrm{VC}(\mathcal{H})\). With probability at least \(1-\delta\), for all \(h\in\mathcal{H}\),</p>
+    \[ \lvert \varepsilon(h) - \hat\varepsilon(h)\rvert \le O\!\left(\sqrt{\frac{D}{n}\log\frac{n}{D} + \frac1n\log\frac1\delta}\right) \]
+    <p>and hence \(\varepsilon(\hat h) \le \varepsilon(h^\ast) + O(\cdot)\), with \(n = O_{\gamma,\delta}(D)\) sufficing.</p>
+  </div>
+
+  <p>Same shape as before, with \(\log k\) replaced by \(D\). Finite VC dimension is exactly the condition for uniform convergence to kick in as \(n\) grows — and \(D\) is a property of the function class itself, immune to how you chose to parameterise it.</p>
+
+  <hr class="rule">
+
+  <h2>What this bought</h2>
+
+  <p>For most reasonable classes, VC dimension is roughly the number of parameters — so the honest argument lands in the same place as the 64-bit hack, without the embarrassment. <strong>Data needed \(\approx\) linear in parameters.</strong></p>
+
+  <p>Two caveats I don't want to lose. All of this was proved for ERM; algorithms that don't minimise training error (or an approximation of it) aren't covered. And every line depended on train and test coming from the same \(\mathcal{D}\) — break that, and the theorems say nothing at all.</p>
+
+  <div class="end">— fin —</div>
+  </div>
+
+</div>
+</body>
+</html>
