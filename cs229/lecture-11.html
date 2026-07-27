@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The rotation you can't see — CS229 Lecture 11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+  chtml: { scale: 1.0 },
+  options: { renderActions: { addMenu: [] } }
+};
+</script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+<style>
+  :root{
+    --paper:#FBFAF6;
+    --ink:#1B1B18;
+    --ink-soft:#57544C;
+    --ink-faint:#8A877D;
+    --pen:#C4142A;
+    --pen-soft:rgba(196,20,42,0.07);
+    --rule:rgba(27,27,24,0.14);
+    --grid:rgba(27,27,24,0.045);
+    --maxcol:700px;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:26px 26px;
+    color:var(--ink);
+    font-family:'Newsreader', Georgia, serif;
+    font-size:20px;
+    line-height:1.66;
+    font-weight:400;
+  }
+  .wrap{max-width:964px;margin:0 auto;padding:0 32px 120px;}
+  .col{max-width:var(--maxcol);position:relative;}
+
+  .backlink{
+    max-width:var(--maxcol);
+    padding:38px 0 0;
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:14px;
+    letter-spacing:0.04em;
+  }
+  .backlink a{color:var(--ink-faint);text-decoration:none;border-bottom:1px solid transparent;}
+  .backlink a:hover{color:var(--pen);border-bottom-color:var(--pen);}
+
+  header{padding:56px 0 10px;}
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--pen);
+  }
+  h1{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:46px;
+    line-height:1.12;
+    font-weight:700;
+    letter-spacing:-0.02em;
+    margin:14px 0 16px;
+  }
+  .standfirst{
+    font-size:21px;
+    color:var(--ink-soft);
+    font-style:italic;
+    margin:0 0 26px;
+  }
+  .byline{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    color:var(--ink-faint);
+    letter-spacing:0.04em;
+    border-top:1px solid var(--rule);
+    padding-top:14px;
+  }
+
+  h2{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:27px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    margin:64px 0 6px;
+    line-height:1.24;
+  }
+  h3{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:19px;
+    font-weight:500;
+    margin:40px 0 4px;
+  }
+  .num{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:1.55em;height:1.55em;
+    border:1.5px solid var(--pen);
+    border-radius:50%;
+    color:var(--pen);
+    font-size:0.62em;
+    font-family:'JetBrains Mono', monospace;
+    vertical-align:0.22em;
+    margin-right:0.5em;
+  }
+  p{margin:1.05em 0;}
+  strong{font-weight:500;color:var(--ink);}
+  em{font-style:italic;}
+  code{
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.84em;
+    background:var(--pen-soft);
+    padding:1px 5px;
+    border-radius:3px;
+  }
+  a{color:var(--ink);text-decoration-color:var(--pen);text-underline-offset:3px;}
+
+  .lede{border-left:2px solid var(--pen);padding-left:18px;margin:26px 0;color:var(--ink-soft);}
+
+  .sn{
+    position:absolute;
+    left:calc(var(--maxcol) + 26px);
+    width:172px;
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:14px;
+    line-height:1.5;
+    color:var(--pen);
+    border-top:1.5px solid var(--pen);
+    padding-top:8px;
+  }
+  .sn b{font-weight:700;display:block;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px;}
+
+  .rule{border:0;border-top:1px solid var(--rule);margin:56px 0;}
+
+  figure{margin:38px 0;}
+  figcaption{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:14px;
+    color:var(--ink-faint);
+    margin-top:10px;
+  }
+
+  .algo{
+    border:1px solid var(--rule);
+    background:rgba(255,255,255,0.55);
+    padding:20px 24px;
+    margin:30px 0;
+    font-size:18.5px;
+  }
+  .algo .tag{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--pen);
+    display:block;
+    margin-bottom:10px;
+  }
+  .algo p:first-of-type{margin-top:0;}
+  .algo p:last-child{margin-bottom:0;}
+
+  mjx-container[display="true"]{margin:1.2em 0 !important;}
+  mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%;}
+
+  .end{
+    font-family:'JetBrains Mono', monospace;
+    color:var(--pen);
+    font-size:15px;
+    letter-spacing:0.2em;
+    margin-top:56px;
+  }
+
+  @media (max-width:940px){
+    body{font-size:18.5px;}
+    .wrap{padding:0 22px 90px;}
+    h1{font-size:34px;}
+    h2{font-size:23px;}
+    .sn{
+      position:static;
+      width:auto;
+      margin:22px 0;
+      border-top:0;
+      border-left:2px solid var(--pen);
+      padding:2px 0 2px 14px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="backlink"><a href="/cs229/">← CS229 notes</a></div>
+
+  <div class="col">
+  <header>
+    <div class="eyebrow">Lecture 11</div>
+    <h1>The rotation you can't see</h1>
+    <p class="standfirst">ICA finds a new basis, same as PCA. But it needs the data to be non-Gaussian — and that requirement isn't a limitation, it's the entire resource the method runs on.</p>
+    <div class="byline">Pratyush · CS229 · ICA · cocktail party · change of variables</div>
+  </header>
+
+  <p>Structurally ICA looks like PCA: given data, produce a new basis to represent it in. The goals share nothing.</p>
+
+  <p class="sn"><b>Not dimension reduction</b>PCA discards directions and hands back \(k < d\) coordinates. ICA keeps all \(d\) and just re-picks which \(d\) they are.</p>
+
+  <p>PCA wants the directions carrying the most variance, and throws the rest away. ICA wants directions that are <em>statistically independent</em>, and keeps every one of them. Nothing is compressed.</p>
+
+  <p><strong>The cocktail party problem.</strong> \(d\) people talking at once, \(d\) microphones scattered around the room. Each microphone sits at a different distance from each speaker, so each records a different linear blend of the same \(d\) voices. Can you unscramble them?</p>
+
+  \[ x = As \]
+
+  <p>\(s^{(i)}_j\) is what speaker \(j\) said at time \(i\); \(x^{(i)}_j\) is what microphone \(j\) recorded at time \(i\); \(A\) is the unknown square <strong>mixing matrix</strong>. The goal is the <strong>unmixing matrix</strong> \(W = A^{-1}\), so that</p>
+
+  \[ s^{(i)} = Wx^{(i)}, \qquad s^{(i)}_j = w_j^Tx^{(i)} \]
+
+  <p>with \(w_j^T\) the \(j\)-th row of \(W\). Each row is a recipe for cancelling everyone except one speaker.</p>
+
+  <hr class="rule">
+
+  <h2><span class="num">1</span>What you can never recover</h2>
+
+  <p>Two ambiguities are baked in, and both are harmless.</p>
+
+  <p><strong>Permutation.</strong> For any permutation matrix \(P\), the data can't distinguish \(W\) from \(PW\). You recover the set of sources but not their labelling — there's no such thing as "speaker 1". Nobody cares.</p>
+
+  <p><strong>Scale.</strong> Replace \(A\) by \(2A\) and every \(s^{(i)}\) by \(0.5\,s^{(i)}\), and \(x\) is bit-for-bit identical. More generally, scale a column of \(A\) by \(\alpha\) and its source by \(1/\alpha\). So you cannot recover a source's amplitude — but amplitude is volume, and sign flips are inaudible (\(s\) and \(-s\) sound the same through a speaker). Nobody cares here either.</p>
+
+  <p>Those are annoyances. The next one is an obstruction.</p>
+
+  <hr class="rule">
+
+  <h2><span class="num">2</span>Why Gaussians break it</h2>
+
+  <p>Take \(d=2\) and \(s\sim\mathcal{N}(0,I)\). The contours of \(\mathcal{N}(0,I)\) are circles — the density is <strong>rotationally symmetric</strong>. Hold that thought.</p>
+
+  <p>Observe \(x = As\). Then \(\mathbb{E}[x] = A\mathbb{E}[s] = 0\) and</p>
+
+  \[ \mathrm{Cov}[x] = \mathbb{E}[Ass^TA^T] = A\,\mathrm{Cov}[s]\,A^T = AA^T \]
+
+  <p>so \(x \sim \mathcal{N}(0, AA^T)\). Now let \(R\) be any orthogonal matrix, \(RR^T = R^TR = I\), and set \(A' = AR\). If the mixing had been \(A'\) instead:</p>
+
+  \[ \mathbb{E}[x'x'^T] = \mathbb{E}[ARss^T(AR)^T] = AR\,I\,R^TA^T = AA^T \]
+
+  <p class="sn"><b>Second moments are rotation-blind</b>A Gaussian is fully determined by its covariance, and covariance cannot tell \(A\) from \(AR\). There is nothing else to look at.</p>
+
+  <p><strong>The same distribution.</strong> Not approximately — exactly. \(A\) and \(AR\) generate observations you could never tell apart, for every orthogonal \(R\). There's a whole rotation group's worth of mixing matrices consistent with your data, and no amount of it will narrow them down.</p>
+
+  <figure>
+    <svg viewBox="0 0 620 250" width="100%" role="img" aria-label="Left: circular Gaussian contours with two different candidate basis pairs, both equally valid. Right: a non-Gaussian cloud shaped like a parallelogram whose edges pin the basis uniquely.">
+      <g>
+        <circle cx="150" cy="120" r="30" fill="none" stroke="rgba(27,27,24,0.25)"/>
+        <circle cx="150" cy="120" r="55" fill="none" stroke="rgba(27,27,24,0.25)"/>
+        <circle cx="150" cy="120" r="80" fill="none" stroke="rgba(27,27,24,0.25)"/>
+        <line x1="150" y1="120" x2="220" y2="120" stroke="#C4142A" stroke-width="2"/>
+        <line x1="150" y1="120" x2="150" y2="50" stroke="#C4142A" stroke-width="2"/>
+        <line x1="150" y1="120" x2="207" y2="80" stroke="#C4142A" stroke-width="2" stroke-dasharray="5 4"/>
+        <line x1="150" y1="120" x2="110" y2="63" stroke="#C4142A" stroke-width="2" stroke-dasharray="5 4"/>
+        <text x="150" y="228" text-anchor="middle" font-family="'Space Grotesk', sans-serif" font-size="14" fill="#8A877D">Gaussian — both bases fit</text>
+      </g>
+
+      <line x1="305" y1="30" x2="305" y2="200" stroke="rgba(27,27,24,0.14)"/>
+
+      <g>
+        <polygon points="545,155 495,35 375,85 425,205" fill="rgba(196,20,42,0.05)" stroke="rgba(27,27,24,0.3)"/>
+        <g fill="#1B1B18">
+          <circle cx="497" cy="125" r="3"/><circle cx="451" cy="166" r="3"/><circle cx="490" cy="72" r="3"/>
+          <circle cx="416" cy="117" r="3"/><circle cx="490" cy="157" r="3"/><circle cx="423" cy="150" r="3"/>
+          <circle cx="511" cy="141" r="3"/><circle cx="427" cy="92" r="3"/><circle cx="449" cy="76" r="3"/>
+          <circle cx="484" cy="110" r="3"/><circle cx="464" cy="147" r="3"/><circle cx="471" cy="95" r="3"/>
+        </g>
+        <line x1="460" y1="120" x2="520" y2="95" stroke="#C4142A" stroke-width="2"/>
+        <line x1="460" y1="120" x2="485" y2="180" stroke="#C4142A" stroke-width="2"/>
+        <text x="460" y="228" text-anchor="middle" font-family="'Space Grotesk', sans-serif" font-size="14" fill="#8A877D">non-Gaussian — edges pin it</text>
+      </g>
+    </svg>
+    <figcaption>A circle has no preferred axes, so no rotation of the basis is more correct than another. Give the cloud corners and the answer becomes unique.</figcaption>
+  </figure>
+
+  <p class="lede">Gaussian sources \(\Rightarrow\) PCA is all you can have. Non-Gaussian sources \(\Rightarrow\) ICA becomes possible.</p>
+
+  <p>That split is the cleanest way to hold the two methods apart. PCA only ever consults second moments; it whitens the data and then has nothing left to say, because after whitening every rotation looks the same. ICA's whole job is to spend that leftover rotational freedom — and the only information capable of spending it lives <em>beyond</em> second moments. Which is to say, in the non-Gaussianity.</p>
+
+  <p>So the assumption "the sources are not Gaussian" isn't a technical caveat you'd remove if you could. Remove it and there is nothing to find.</p>
+
+  <hr class="rule">
+
+  <h2><span class="num">3</span>Digression: what a linear map does to a density</h2>
+
+  <p>Before the algorithm, one piece of machinery. \(s\) has density \(p_s\), and \(x = As\). What's \(p_x\)?</p>
+
+  <p>The tempting answer is \(p_x(x) = p_s(Wx)\): invert to find which \(s\) produced this \(x\), read off its density. It's wrong, and one line kills it. Let \(s\sim\mathrm{Uniform}[0,1]\) and \(A = 2\). Then \(x\) is uniform on \([0,2]\), so \(p_x(x) = 0.5\) there. But \(p_s(Wx) = p_s(0.5x) = 1\) on that interval. Off by a factor of \(0.5 = |W|\).</p>
+
+  \[ \boxed{\;p_x(x) = p_s(Wx)\cdot|W|\;}, \qquad W = A^{-1} \]
+
+  <figure>
+    <svg viewBox="0 0 620 175" width="100%" role="img" aria-label="A unit square mapped by A into a parallelogram of area equal to the determinant of A">
+      <rect x="130" y="35" width="80" height="80" fill="rgba(27,27,24,0.05)" stroke="rgba(27,27,24,0.35)"/>
+      <text x="170" y="145" text-anchor="middle" font-family="'Space Grotesk', sans-serif" font-size="13" fill="#8A877D">[0,1]ᵈ — volume 1</text>
+
+      <line x1="250" y1="75" x2="315" y2="75" stroke="#1B1B18" stroke-width="1.4"/>
+      <path d="M315,75 l-9,-4 l0,8 z" fill="#1B1B18"/>
+      <text x="282" y="63" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="15" fill="#C4142A">A</text>
+
+      <polygon points="360,30 470,50 500,140 390,120" fill="rgba(196,20,42,0.08)" stroke="#C4142A"/>
+      <text x="430" y="163" text-anchor="middle" font-family="'Space Grotesk', sans-serif" font-size="13" fill="#8A877D">volume |A|</text>
+    </svg>
+    <figcaption>The same probability mass now covers \(|A|\) times the volume, so the density must be divided by \(|A|\) — equivalently, multiplied by \(|W|\).</figcaption>
+  </figure>
+
+  <p>That's the memorable version: \(A\) maps the unit hypercube to a region of volume \(|A|\). Probability is conserved, volume isn't, so the density picks up the reciprocal factor. It generalises the uniform example exactly.</p>
+
+  <hr class="rule">
+
+  <h2><span class="num">4</span>The algorithm</h2>
+
+  <p>Write down the independence assumption — this <em>is</em> "independent components", stated:</p>
+
+  \[ p(s) = \prod_{j=1}^{d} p_s(s_j) \]
+
+  <p>Modelling the joint as a product of marginals is precisely the claim that the sources don't interact. Push it through the change of variables:</p>
+
+  \[ p(x) = \prod_{j=1}^{d} p_s(w_j^Tx)\cdot|W| \]
+
+  <p>All that's left is choosing \(p_s\). Easiest route is through a cdf, since a cdf just has to be monotone from 0 to 1 — and the density is its derivative. The Gaussian cdf is off the table by §2. A reasonable default that rises slowly from 0 to 1 is the sigmoid \(g(s) = 1/(1+e^{-s})\), so \(p_s = g'\). (Substitute something better if you actually know the source distribution.)</p>
+
+  \[ \ell(W) = \sum_{i=1}^{n}\left(\sum_{j=1}^{d}\log g'(w_j^Tx^{(i)}) + \log|W|\right) \]
+
+  <p class="sn"><b>What \(\log|W|\) is doing</b>\(g'\) peaks at 0, so the first term alone is maximised by \(W = 0\) — every source silenced. \(\log|W| \to -\infty\) as \(W\) goes singular. The Jacobian term is what keeps the answer from collapsing.</p>
+
+  <p>Worth pausing on that determinant. It arrived as bookkeeping from §3, but it's load-bearing: without it, the likelihood is maximised by shrinking \(W\) to zero. The change-of-variables factor is the only thing pushing \(W\) away from degeneracy.</p>
+
+  <p>Differentiate, using \(\nabla_W|W| = |W|(W^{-1})^T\), and you get stochastic gradient ascent:</p>
+
+  <div class="algo">
+    <span class="tag">Bell–Sejnowski, as MLE</span>
+    \[ W := W + \alpha\left(\begin{bmatrix} 1-2g(w_1^Tx^{(i)}) \\ 1-2g(w_2^Tx^{(i)}) \\ \vdots \\ 1-2g(w_d^Tx^{(i)})\end{bmatrix} x^{(i)T} + (W^T)^{-1}\right) \]
+    <p>On convergence, recover the sources with \(s^{(i)} = Wx^{(i)}\).</p>
+  </div>
+
+  <p>(This also assumes the data has zero mean — \(p_s = g'\) is symmetric, so it implies \(\mathbb{E}[s]=0\) and hence \(\mathbb{E}[x]=0\). Acoustic signals give you that for free.)</p>
+
+  <hr class="rule">
+
+  <h2><span class="num">5</span>The assumption that's false</h2>
+
+  <p>Writing \(\ell(W) = \sum_i \log p(x^{(i)};W)\) quietly assumed the \(x^{(i)}\) are independent <em>across \(i\)</em>.</p>
+
+  <p class="sn"><b>Two different independences</b>Across <em>coordinates</em> (\(p(s) = \prod_j p_s(s_j)\)) is the modelling assumption ICA is built on. Across <em>examples</em> is a convenience in writing the likelihood. Don't conflate them.</p>
+
+  <p>For speech that's plainly untrue. Consecutive audio samples are heavily correlated — that's what makes it a sound and not static. So the likelihood is misspecified from the start.</p>
+
+  <p>In practice it survives: with enough data, correlated training examples don't hurt the estimate much. One cheap trick helps — visit the examples in randomly permuted order when running SGA, so consecutive updates aren't nearly identical. Shuffle the training set.</p>
+
+  <p>The honest fix is a model that represents time instead of ignoring it: hidden Markov models, autoregressive models. ICA's version of independence is across speakers; it has nothing to say about across-time structure, and pretending otherwise is a choice you should make knowingly.</p>
+
+  <hr class="rule">
+
+  <h2>The inversion</h2>
+
+  <p>Nearly everything unsupervised in this course either assumed Gaussianity or was indifferent to it. GDA, mixtures of Gaussians, factor analysis — all built on it. PCA doesn't need it but doesn't benefit either; it only looks at second moments regardless.</p>
+
+  <p>ICA is the first method that requires Gaussianity's <em>absence</em>. The rotational symmetry that makes Gaussians so pleasant everywhere else is exactly what destroys identifiability here, and the departures from that symmetry — the corners, the heavy tails, the structure past the covariance — are the only thing telling you where the sources actually point.</p>
+
+  <div class="end">— fin —</div>
+  </div>
+
+</div>
+</body>
+</html>
