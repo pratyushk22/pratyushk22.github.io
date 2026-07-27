@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spend data, spend compute, or spend belief — CS229 Lecture 5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+  chtml: { scale: 1.0 },
+  options: { renderActions: { addMenu: [] } }
+};
+</script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+<style>
+  :root{
+    --paper:#FBFAF6;
+    --ink:#1B1B18;
+    --ink-soft:#57544C;
+    --ink-faint:#8A877D;
+    --pen:#C4142A;
+    --pen-soft:rgba(196,20,42,0.07);
+    --rule:rgba(27,27,24,0.14);
+    --grid:rgba(27,27,24,0.045);
+    --maxcol:700px;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:26px 26px;
+    color:var(--ink);
+    font-family:'Newsreader', Georgia, serif;
+    font-size:20px;
+    line-height:1.66;
+    font-weight:400;
+  }
+  .wrap{max-width:964px;margin:0 auto;padding:0 32px 120px;}
+  .col{max-width:var(--maxcol);position:relative;}
+
+  .backlink{
+    max-width:var(--maxcol);
+    padding:38px 0 0;
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:14px;
+    letter-spacing:0.04em;
+  }
+  .backlink a{color:var(--ink-faint);text-decoration:none;border-bottom:1px solid transparent;}
+  .backlink a:hover{color:var(--pen);border-bottom-color:var(--pen);}
+
+  header{padding:56px 0 10px;}
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--pen);
+  }
+  h1{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:46px;
+    line-height:1.12;
+    font-weight:700;
+    letter-spacing:-0.02em;
+    margin:14px 0 16px;
+  }
+  .standfirst{
+    font-size:21px;
+    color:var(--ink-soft);
+    font-style:italic;
+    margin:0 0 26px;
+  }
+  .byline{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    color:var(--ink-faint);
+    letter-spacing:0.04em;
+    border-top:1px solid var(--rule);
+    padding-top:14px;
+  }
+
+  h2{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:27px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    margin:64px 0 6px;
+    line-height:1.24;
+  }
+  h3{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:19px;
+    font-weight:500;
+    margin:40px 0 4px;
+  }
+  .num{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:1.55em;height:1.55em;
+    border:1.5px solid var(--pen);
+    border-radius:50%;
+    color:var(--pen);
+    font-size:0.62em;
+    font-family:'JetBrains Mono', monospace;
+    vertical-align:0.22em;
+    margin-right:0.5em;
+  }
+  p{margin:1.05em 0;}
+  strong{font-weight:500;color:var(--ink);}
+  em{font-style:italic;}
+  code{
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.84em;
+    background:var(--pen-soft);
+    padding:1px 5px;
+    border-radius:3px;
+  }
+  a{color:var(--ink);text-decoration-color:var(--pen);text-underline-offset:3px;}
+
+  .lede{border-left:2px solid var(--pen);padding-left:18px;margin:26px 0;color:var(--ink-soft);}
+
+  .sn{
+    position:absolute;
+    left:calc(var(--maxcol) + 26px);
+    width:172px;
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:14px;
+    line-height:1.5;
+    color:var(--pen);
+    border-top:1.5px solid var(--pen);
+    padding-top:8px;
+  }
+  .sn b{font-weight:700;display:block;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px;}
+
+  .rule{border:0;border-top:1px solid var(--rule);margin:56px 0;}
+
+  figure{margin:38px 0;}
+  figcaption{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:14px;
+    color:var(--ink-faint);
+    margin-top:10px;
+  }
+
+  .algo{
+    border:1px solid var(--rule);
+    background:rgba(255,255,255,0.55);
+    padding:20px 24px;
+    margin:30px 0;
+    font-size:18.5px;
+  }
+  .algo .tag{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--pen);
+    display:block;
+    margin-bottom:10px;
+  }
+  .algo ol{margin:0;padding-left:20px;}
+  .algo li{margin:8px 0;}
+  .algo p:first-of-type{margin-top:0;}
+  .algo p:last-child{margin-bottom:0;}
+
+  mjx-container[display="true"]{margin:1.2em 0 !important;}
+  mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%;}
+
+  .end{
+    font-family:'JetBrains Mono', monospace;
+    color:var(--pen);
+    font-size:15px;
+    letter-spacing:0.2em;
+    margin-top:56px;
+  }
+
+  @media (max-width:940px){
+    body{font-size:18.5px;}
+    .wrap{padding:0 22px 90px;}
+    h1{font-size:34px;}
+    h2{font-size:23px;}
+    .sn{
+      position:static;
+      width:auto;
+      margin:22px 0;
+      border-top:0;
+      border-left:2px solid var(--pen);
+      padding:2px 0 2px 14px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="backlink"><a href="/cs229/">← CS229 notes</a></div>
+
+  <div class="col">
+  <header>
+    <div class="eyebrow">Lecture 5</div>
+    <h1>Spend data, spend compute, or spend belief</h1>
+    <p class="standfirst">Last lecture proved the bias–variance tradeoff exists. It said nothing about where to sit on it. This one is three answers, at three prices.</p>
+    <div class="byline">Pratyush · CS229 · cross validation · feature selection · MAP</div>
+  </header>
+
+  <p>Suppose you're picking the degree of a polynomial, \(k \in \{0,\dots,10\}\). Or the bandwidth \(\tau\) for locally weighted regression, or \(C\) for the soft-margin SVM. Or just: SVM, neural net, or logistic regression. Call the candidates \(\mathcal{M} = \{M_1,\dots,M_d\}\) — a finite set of models, one of which you have to commit to.</p>
+
+  <p>The obvious algorithm, straight out of ERM:</p>
+
+  <div class="algo">
+    <span class="tag">The broken one</span>
+    <ol>
+      <li>Train each \(M_i\) on \(S\), get \(h_i\).</li>
+      <li>Pick the \(h_i\) with the smallest training error.</li>
+    </ol>
+  </div>
+
+  <p class="sn"><b>Not a bug in the procedure</b>It's the second term of Lecture 4's bound being invisible. Training error can only see bias. Variance is, by construction, the part it can't measure.</p>
+
+  <p>This picks degree 10. Always. Training error is monotonically decreasing in model complexity, so the argmin over complexity is the maximum complexity, every time. The procedure isn't <em>approximately</em> wrong — it reliably selects the highest-variance option available.</p>
+
+  <p class="lede">The training set fit the model. It cannot also be the judge. Whatever tells you which model to pick has to come from somewhere else — and this lecture is three different somewheres.</p>
+
+  <hr class="rule">
+
+  <h2><span class="num">1</span>Spend data: cross validation</h2>
+
+  <p>The cheapest honest fix is to withhold some data from the fitting, and let it do the judging.</p>
+
+  <div class="algo">
+    <span class="tag">Hold-out (simple) cross validation</span>
+    <ol>
+      <li>Split \(S\) randomly into \(S_{\text{train}}\) (~70%) and \(S_{\text{cv}}\) (~30%).</li>
+      <li>Train each \(M_i\) on \(S_{\text{train}}\) only.</li>
+      <li>Output the \(h_i\) minimising \(\hat\varepsilon_{S_{\text{cv}}}(h_i)\).</li>
+    </ol>
+  </div>
+
+  <p class="sn"><b>Optional step 3</b>Select \(M_i\), then retrain it on <em>all</em> of \(S\). Usually a good idea — except for algorithms very sensitive to perturbations of the data or initial conditions, where doing well on \(S_{\text{train}}\) doesn't transfer.</p>
+
+  <p>Because the models never saw \(S_{\text{cv}}\), \(\hat\varepsilon_{S_{\text{cv}}}\) is an honest estimate of generalization error, and comparing on it is legitimate. Typically a quarter to a third of the data goes into the hold-out set.</p>
+
+  <p>And that's the cost, stated plainly: <strong>you wasted 30% of your data.</strong> Even with the retraining step, every model you compared was trained on \(0.7n\) examples, so you selected a model for a smaller problem than the one you actually have. Fine when data is cheap. Not fine when \(n = 20\).</p>
+
+  <h3>\(k\)-fold</h3>
+
+  <p>Hold out less, and rotate which part you hold out.</p>
+
+  <div class="algo">
+    <span class="tag">\(k\)-fold cross validation</span>
+    <ol>
+      <li>Split \(S\) into \(k\) disjoint subsets \(S_1,\dots,S_k\).</li>
+      <li>For each model \(M_i\): for \(j=1,\dots,k\), train on everything except \(S_j\), test on \(S_j\), and average the \(k\) errors.</li>
+      <li>Pick the model with the lowest average, retrain on all of \(S\).</li>
+    </ol>
+  </div>
+
+  <figure>
+    <svg viewBox="0 0 620 268" width="100%" role="img" aria-label="Diagram comparing a single 70/30 hold-out split with five-fold cross validation, where the validation block rotates through each fold">
+      <text x="0" y="16" font-family="'Space Grotesk', sans-serif" font-size="13" fill="#8A877D">hold-out</text>
+      <rect x="0" y="24" width="434" height="26" fill="rgba(27,27,24,0.06)" stroke="rgba(27,27,24,0.2)"/>
+      <rect x="434" y="24" width="186" height="26" fill="rgba(196,20,42,0.16)" stroke="#C4142A"/>
+
+      <text x="0" y="84" font-family="'Space Grotesk', sans-serif" font-size="13" fill="#8A877D">5-fold</text>
+
+      <g stroke="rgba(27,27,24,0.2)">
+        <g transform="translate(0,92)">
+          <rect x="0" y="0" width="124" height="22" fill="rgba(196,20,42,0.16)" stroke="#C4142A"/>
+          <rect x="124" y="0" width="496" height="22" fill="rgba(27,27,24,0.06)"/>
+        </g>
+        <g transform="translate(0,122)">
+          <rect x="0" y="0" width="124" height="22" fill="rgba(27,27,24,0.06)"/>
+          <rect x="124" y="0" width="124" height="22" fill="rgba(196,20,42,0.16)" stroke="#C4142A"/>
+          <rect x="248" y="0" width="372" height="22" fill="rgba(27,27,24,0.06)"/>
+        </g>
+        <g transform="translate(0,152)">
+          <rect x="0" y="0" width="248" height="22" fill="rgba(27,27,24,0.06)"/>
+          <rect x="248" y="0" width="124" height="22" fill="rgba(196,20,42,0.16)" stroke="#C4142A"/>
+          <rect x="372" y="0" width="248" height="22" fill="rgba(27,27,24,0.06)"/>
+        </g>
+        <g transform="translate(0,182)">
+          <rect x="0" y="0" width="372" height="22" fill="rgba(27,27,24,0.06)"/>
+          <rect x="372" y="0" width="124" height="22" fill="rgba(196,20,42,0.16)" stroke="#C4142A"/>
+          <rect x="496" y="0" width="124" height="22" fill="rgba(27,27,24,0.06)"/>
+        </g>
+        <g transform="translate(0,212)">
+          <rect x="0" y="0" width="496" height="22" fill="rgba(27,27,24,0.06)"/>
+          <rect x="496" y="0" width="124" height="22" fill="rgba(196,20,42,0.16)" stroke="#C4142A"/>
+        </g>
+      </g>
+
+      <rect x="0" y="248" width="14" height="12" fill="rgba(196,20,42,0.16)" stroke="#C4142A"/>
+      <text x="22" y="258" font-family="'Space Grotesk', sans-serif" font-size="13" fill="#8A877D">validation</text>
+      <rect x="112" y="248" width="14" height="12" fill="rgba(27,27,24,0.06)" stroke="rgba(27,27,24,0.2)"/>
+      <text x="134" y="258" font-family="'Space Grotesk', sans-serif" font-size="13" fill="#8A877D">train</text>
+    </svg>
+    <figcaption>Every example gets to be a judge exactly once. The price is \(k\) trainings per model instead of one.</figcaption>
+  </figure>
+
+  <p>\(k=10\) is the usual choice. You now hold out \(1/k\) rather than \(30\%\), so almost all the data trains — but you train each model \(k\) times. <strong>You traded data for compute.</strong> Push it to the extreme, \(k = n\), and you get <strong>leave-one-out</strong>: train on \(n-1\), test on the one left over, repeat \(n\) times. Reserved for when data is genuinely scarce, because it's brutally expensive.</p>
+
+  <p>One thing that's easy to miss: cross validation isn't only for <em>choosing</em>. It's also just how you honestly estimate how well a single algorithm performs — which is what you'd report in a paper.</p>
+
+  <hr class="rule">
+
+  <h2><span class="num">2</span>Spend compute: feature selection</h2>
+
+  <p>A special and important case. You have \(d\) features, \(d\) is enormous, and you suspect only a handful matter. VC dimension scales with \(d\), so the bound from last lecture says you'll overfit unless \(n\) is large. Throwing features away is a direct attack on the variance term.</p>
+
+  <p>Each feature is in or out, so there are \(2^d\) subsets — this is model selection over \(2^d\) models. Enumerating them is hopeless, so you search heuristically.</p>
+
+  <div class="algo">
+    <span class="tag">Forward search</span>
+    <ol>
+      <li>\(\mathcal{F} = \emptyset\).</li>
+      <li>Repeat: for each \(i \notin \mathcal{F}\), evaluate \(\mathcal{F}_i = \mathcal{F}\cup\{i\}\) by cross validation. Set \(\mathcal{F}\) to the best one found.</li>
+      <li>Output the best subset seen anywhere in the search.</li>
+    </ol>
+  </div>
+
+  <p>Greedy: add the single feature that helps most, then the next, until \(\mathcal{F}\) is everything or hits a size cap. <strong>Backward search</strong> is the mirror image — start with all \(d\) features and delete one at a time.</p>
+
+  <p class="sn"><b>Wrapper methods</b>They wrap around your learner and call it repeatedly. That's why they're expensive — and why they're accurate. You're measuring the thing you care about instead of a proxy for it.</p>
+
+  <p>Both are <strong>wrapper</strong> methods: the search doesn't reason about features at all, it just re-runs the whole learning algorithm on each candidate subset and looks at the score. A complete forward search costs about \(O(d^2)\) calls to the learner, each of which is itself a cross validation. It works well and it is very slow.</p>
+
+  <h3>Filter methods</h3>
+
+  <p>The cheap alternative: score every feature <em>once</em>, independently, and keep the top \(k\). No retraining, no search — one pass. You're replacing "does this subset actually help my model" with a proxy for "does this feature look informative."</p>
+
+  <p>Simplest score: \(|{\rm corr}(x_i, y)\) on the training data. More common for discrete features, <strong>mutual information</strong>:</p>
+
+  \[ \mathrm{MI}(x_i, y) = \sum_{x_i}\sum_{y} p(x_i, y)\log\frac{p(x_i,y)}{p(x_i)p(y)} \]
+
+  <p>with all three probabilities estimated from empirical counts. The intuition is much clearer in the other form:</p>
+
+  \[ \mathrm{MI}(x_i, y) = \mathrm{KL}\big(p(x_i,y)\;\|\;p(x_i)p(y)\big) \]
+
+  <p class="sn"><b>What MI is measuring</b>Distance from independence. If \(x_i\) told you nothing about \(y\), the joint would factorise — so measure how badly it fails to.</p>
+
+  <p>\(p(x_i)p(y)\) is what the joint distribution <em>would be</em> if the feature and the label were independent. MI is how far the real joint sits from that. Independent \(\Rightarrow\) they're equal \(\Rightarrow\) MI \(=0\) \(\Rightarrow\) the feature is useless, exactly as it should score. Informative features have a joint far from the factorised one, and score high.</p>
+
+  <p>Then: how many features do you keep? Choose \(k\) by cross validation. Every road leads back to §1.</p>
+
+  <hr class="rule">
+
+  <h2><span class="num">3</span>Spend belief: the prior</h2>
+
+  <p>The third answer doesn't hold out data or search over models. It changes what you're optimising.</p>
+
+  <p>Recall MLE:</p>
+
+  \[ \theta_{\mathrm{MLE}} = \arg\max_\theta \prod_{i=1}^{n} p(y^{(i)}\mid x^{(i)};\theta) \]
+
+  <p>This is <strong>frequentist</strong>. \(\theta\) is a fixed constant of the world — unknown, but not random — and your job is to build a procedure that estimates it. The semicolon in \(p(y\mid x;\theta)\) is doing real work: \(\theta\) parameterises the distribution, it isn't an event you can condition on.</p>
+
+  <p>The <strong>Bayesian</strong> move is to treat \(\theta\) itself as a random variable with a prior \(p(\theta)\) encoding what you believed before seeing data. Then the data updates it:</p>
+
+  \[ p(\theta\mid S) = \frac{p(S\mid\theta)p(\theta)}{p(S)} = \frac{\left(\prod_i p(y^{(i)}\mid x^{(i)},\theta)\right)p(\theta)}{\int_\theta \left(\prod_i p(y^{(i)}\mid x^{(i)},\theta)\right)p(\theta)\,d\theta} \]
+
+  <p>and predictions average over everything \(\theta\) could be, weighted by how plausible the data made it:</p>
+
+  \[ p(y\mid x, S) = \int_\theta p(y\mid x,\theta)\,p(\theta\mid S)\,d\theta \]
+
+  <p>That's fully Bayesian prediction, and it's usually computationally hopeless — the denominator is an integral over a high-dimensional \(\theta\) with no closed form.</p>
+
+  <h3>MAP: collapse the posterior to a point</h3>
+
+  <p>So approximate. Instead of carrying the whole posterior, take its mode:</p>
+
+  \[ \theta_{\mathrm{MAP}} = \arg\max_\theta \prod_{i=1}^{n} p(y^{(i)}\mid x^{(i)},\theta)\,p(\theta) \]
+
+  <p><strong>Identical to MLE except for one extra factor.</strong> The normaliser \(p(S)\) doesn't depend on \(\theta\), so it drops out of the argmax entirely — the intractable integral never has to be computed.</p>
+
+  <p>Now take the standard choice \(\theta \sim \mathcal{N}(0,\tau^2 I)\) and put it in log space:</p>
+
+  \[ \log p(\theta) = -\frac{\lVert\theta\rVert^2}{2\tau^2} + \text{const} \]
+  \[ \theta_{\mathrm{MAP}} = \arg\max_\theta \left[\sum_{i=1}^{n}\log p(y^{(i)}\mid x^{(i)},\theta) \;-\; \frac{\lVert\theta\rVert^2}{2\tau^2}\right] \]
+
+  <p class="sn"><b>The identity worth keeping</b>MAP = MLE + log prior = regularised MLE. \(L_2\) isn't a hack bolted onto the loss; it's a Gaussian prior, written down.</p>
+
+  <p>And there it is. A Gaussian prior <em>is</em> an \(L_2\) penalty, with \(\lambda = 1/2\tau^2\). The prior's variance and the regularisation strength are the same knob: small \(\tau\) means you strongly believe \(\theta\) is near zero, which means a heavy penalty on large \(\theta\).</p>
+
+  <p>The consequence is that \(\theta_{\mathrm{MAP}}\) has smaller norm than \(\theta_{\mathrm{MLE}}\), and is correspondingly less prone to overfitting. Bayesian logistic regression works well on text classification precisely where you'd expect it to fail — \(d \gg n\), far more features than examples.</p>
+
+  <hr class="rule">
+
+  <h2>Three prices for the same thing</h2>
+
+  <p>All three sections answer one question — <em>where does the information come from, if not the training error?</em> — and they differ only in what they charge you.</p>
+
+  <p>Cross validation spends <strong>data</strong>: hold some back and let it judge. Feature selection spends <strong>compute</strong>: re-run the learner over a search space until something wins. The prior spends <strong>belief</strong>: assert up front that small \(\theta\) is more likely, and let that assertion pay part of the bill.</p>
+
+  <p>The last one is the cheapest to run and the most honest about being an assumption. It's also the only one that doesn't need a second dataset — the belief is the second dataset.</p>
+
+  <div class="end">— fin —</div>
+  </div>
+
+</div>
+</body>
+</html>
