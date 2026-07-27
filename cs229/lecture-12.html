@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nobody tells you the right answer — CS229 Lecture 12</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+  chtml: { scale: 1.0 },
+  options: { renderActions: { addMenu: [] } }
+};
+</script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+<style>
+  :root{
+    --paper:#FBFAF6;
+    --ink:#1B1B18;
+    --ink-soft:#57544C;
+    --ink-faint:#8A877D;
+    --pen:#C4142A;
+    --pen-soft:rgba(196,20,42,0.07);
+    --rule:rgba(27,27,24,0.14);
+    --grid:rgba(27,27,24,0.045);
+    --maxcol:700px;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:26px 26px;
+    color:var(--ink);
+    font-family:"Newsreader",Georgia,serif;
+    font-size:19px;
+    line-height:1.62;
+  }
+  .wrap{
+    max-width:var(--maxcol);
+    margin:0 auto;
+    padding:56px 24px 120px;
+    position:relative;
+  }
+  a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--rule);}
+  a:hover{border-bottom-color:var(--pen);}
+  .back{
+    font-family:"JetBrains Mono",monospace;
+    font-size:12px;
+    letter-spacing:.04em;
+    color:var(--ink-faint);
+    border:none;
+    text-transform:uppercase;
+  }
+  .back:hover{color:var(--pen);border:none;}
+  header{margin:38px 0 54px;}
+  .kicker{
+    font-family:"JetBrains Mono",monospace;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--pen);
+    margin-bottom:14px;
+  }
+  h1{
+    font-family:"Space Grotesk",sans-serif;
+    font-weight:700;
+    font-size:40px;
+    line-height:1.14;
+    letter-spacing:-.02em;
+    margin:0 0 16px;
+  }
+  .standfirst{
+    font-size:20px;
+    color:var(--ink-soft);
+    font-style:italic;
+    margin:0;
+  }
+  .meta{
+    font-family:"JetBrains Mono",monospace;
+    font-size:12px;
+    color:var(--ink-faint);
+    margin-top:22px;
+    padding-top:14px;
+    border-top:1px solid var(--rule);
+  }
+  h2{
+    font-family:"Space Grotesk",sans-serif;
+    font-weight:500;
+    font-size:25px;
+    letter-spacing:-.01em;
+    margin:54px 0 14px;
+    line-height:1.25;
+  }
+  h2 .num{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:26px;height:26px;
+    border:1.5px solid var(--pen);
+    border-radius:50%;
+    color:var(--pen);
+    font-family:"JetBrains Mono",monospace;
+    font-size:12px;
+    margin-right:12px;
+    vertical-align:2px;
+  }
+  h3{
+    font-family:"Space Grotesk",sans-serif;
+    font-weight:500;
+    font-size:19px;
+    margin:32px 0 8px;
+  }
+  p{margin:0 0 18px;}
+  strong{font-weight:500;color:var(--ink);}
+  em.term{font-style:normal;font-family:"Space Grotesk",sans-serif;font-size:.94em;}
+  code{
+    font-family:"JetBrains Mono",monospace;
+    font-size:.84em;
+    background:rgba(27,27,24,0.05);
+    padding:1px 5px;
+    border-radius:3px;
+  }
+  .rule{border:none;border-top:1px solid var(--rule);margin:44px 0;}
+  blockquote{
+    margin:26px 0;
+    padding:2px 0 2px 20px;
+    border-left:2px solid var(--pen);
+    color:var(--ink-soft);
+    font-style:italic;
+  }
+  .callout{
+    background:var(--pen-soft);
+    border:1px solid rgba(196,20,42,0.2);
+    border-radius:4px;
+    padding:16px 20px;
+    margin:28px 0;
+    font-size:18px;
+  }
+  .callout .label{
+    display:block;
+    font-family:"JetBrains Mono",monospace;
+    font-size:11px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--pen);
+    margin-bottom:8px;
+  }
+  figure{margin:34px 0;text-align:center;}
+  figure svg{max-width:100%;height:auto;}
+  figcaption{
+    font-family:"JetBrains Mono",monospace;
+    font-size:12px;
+    color:var(--ink-faint);
+    margin-top:12px;
+    line-height:1.5;
+  }
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin:28px 0;
+    font-size:17px;
+  }
+  th,td{
+    text-align:left;
+    padding:10px 12px;
+    border-bottom:1px solid var(--rule);
+    vertical-align:top;
+  }
+  th{
+    font-family:"Space Grotesk",sans-serif;
+    font-weight:500;
+    font-size:14px;
+    letter-spacing:.02em;
+    color:var(--ink-soft);
+  }
+  ul,ol{margin:0 0 18px;padding-left:22px;}
+  li{margin-bottom:8px;}
+  .sidenote{
+    font-family:"Newsreader",Georgia,serif;
+    font-size:15.5px;
+    line-height:1.5;
+    color:var(--pen);
+    font-style:italic;
+  }
+  .sidenote .sn-label{
+    display:block;
+    font-family:"JetBrains Mono",monospace;
+    font-style:normal;
+    font-size:10.5px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    margin-bottom:5px;
+  }
+  @media (min-width:1120px){
+    .sidenote{
+      position:absolute;
+      left:calc(50% + 380px);
+      width:230px;
+      margin:0;
+    }
+  }
+  @media (max-width:1119px){
+    .sidenote{
+      margin:24px 0;
+      padding-left:16px;
+      border-left:2px solid rgba(196,20,42,0.35);
+    }
+  }
+  footer{
+    margin-top:70px;
+    padding-top:20px;
+    border-top:1px solid var(--rule);
+    font-family:"JetBrains Mono",monospace;
+    font-size:12px;
+    color:var(--ink-faint);
+    line-height:1.7;
+  }
+  mjx-container[jax="CHTML"][display="true"]{margin:22px 0 !important;}
+  @media (max-width:600px){
+    body{font-size:18px;}
+    h1{font-size:31px;}
+    h2{font-size:22px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<a class="back" href="/cs229/">&larr; CS229 notes</a>
+
+<header>
+  <div class="kicker">Lecture 12 &middot; Reinforcement Learning</div>
+  <h1>Nobody tells you the right answer</h1>
+  <p class="standfirst">Only whether things are going well. Everything in this lecture is the consequence of that one missing label.</p>
+  <div class="meta">MDPs &middot; Bellman &middot; value &amp; policy iteration &middot; continuous states &middot; fitted value iteration</div>
+</header>
+
+<p>Up to now every algorithm we built had a teacher. There was a \(y^{(i)}\) sitting next to every \(x^{(i)}\), and the whole job was to make the model's output agree with it. Supervised learning is, at bottom, imitation.</p>
+
+<p>Now suppose I've built a four-legged robot and I want it to walk. What is the correct label for "leg joint angle at time <em>t</em>"? I have no idea. I know what walking <em>looks</em> like, but I can't write down the right action at every instant. Explicit supervision isn't just expensive here — it doesn't exist.</p>
+
+<p>So we downgrade what we ask for. Instead of a right answer at every step, we ask for a single scalar: a <strong>reward</strong> that says <em>this was good</em> or <em>this was bad</em>. Moving forward, positive. Falling over, very negative. That's it. The algorithm has to work out the actions on its own.</p>
+
+<p class="sidenote">
+  <span class="sn-label">why this is hard</span>
+  The reward is delayed and aggregated. The robot falls at step 200 because of something it did at step 40 — but the signal arrives 160 steps late, attached to the wrong action. Credit assignment is the whole problem.
+</p>
+
+<hr class="rule">
+
+<h2><span class="num">1</span>The MDP: the formal object</h2>
+
+<p>The formalism is a tuple \((S, A, \{P_{sa}\}, \gamma, R)\):</p>
+
+<ul>
+  <li>\(S\) — states. For a helicopter, every position and orientation it can be in.</li>
+  <li>\(A\) — actions. What the control sticks can do.</li>
+  <li>\(P_{sa}\) — <strong>state-action transition probabilities</strong>. For each state \(s\) and action \(a\), a <em>distribution</em> over where you land next. This is where the world's randomness lives.</li>
+  <li>\(\gamma \in [0,1)\) — the discount factor.</li>
+  <li>\(R : S \to \mathbb{R}\) — the reward function.</li>
+</ul>
+
+<p>The process just runs: you're in \(s_0\), you pick \(a_0\), the world rolls a die and puts you in \(s_1 \sim P_{s_0 a_0}\), you pick \(a_1\), and so on.</p>
+
+<p>\[ s_0 \xrightarrow{\ a_0\ } s_1 \xrightarrow{\ a_1\ } s_2 \xrightarrow{\ a_2\ } \cdots \]</p>
+
+<p>The total payoff is the discounted sum</p>
+
+<p>\[ R(s_0) + \gamma R(s_1) + \gamma^2 R(s_2) + \cdots \]</p>
+
+<p>and the goal is to <strong>maximise its expectation</strong>. The expectation matters: the transitions are stochastic, so the same policy gives different trajectories on different runs, and the only sensible thing to optimise is the average.</p>
+
+<p class="sidenote">
+  <span class="sn-label">what \(\gamma\) is really doing</span>
+  Two jobs at once. Practically it makes the infinite sum converge — \(R\) is bounded, so the series is dominated by a geometric one. Conceptually it's an interest rate: a reward today beats the same reward tomorrow, so the agent is pushed to collect good things early and postpone bad things.
+</p>
+
+<h2><span class="num">2</span>Policy, value function, Bellman</h2>
+
+<p>A <strong>policy</strong> is a function \(\pi : S \to A\). No memory, no time index — just a lookup from state to action. Executing \(\pi\) means always taking \(a = \pi(s)\) when you're in \(s\).</p>
+
+<p>The <strong>value function</strong> of a policy is the expected payoff if you start at \(s\) and follow \(\pi\) forever:</p>
+
+<p>\[ V^\pi(s) = \mathbb{E}\!\left[ R(s_0) + \gamma R(s_1) + \gamma^2 R(s_2) + \cdots \ \middle|\ s_0 = s,\ \pi \right] \]</p>
+
+<p>Now the move that makes everything computable. Peel off the first term:</p>
+
+<p>\[ V^\pi(s) = \underbrace{R(s)}_{\text{now}} + \underbrace{\gamma \sum_{s' \in S} P_{s\pi(s)}(s')\, V^\pi(s')}_{\text{everything after}} \]</p>
+
+<p>That's the <strong>Bellman equation</strong>, and it's just the discounted sum re-read as <em>immediate reward + discounted value of wherever I land</em>. The second term is \(\gamma\,\mathbb{E}_{s' \sim P_{s\pi(s)}}[V^\pi(s')]\) — the average value over the distribution of next states.</p>
+
+<p>The payoff is computational. For finite \(|S|\), this is one linear equation per state — \(|S|\) equations in \(|S|\) unknowns. Write them down, solve the system, done. An infinite-horizon expectation collapses into linear algebra.</p>
+
+<h3>The optimal version</h3>
+
+<p>\[ V^*(s) = \max_\pi V^\pi(s), \qquad V^*(s) = R(s) + \max_{a \in A} \gamma \sum_{s'} P_{sa}(s')V^*(s') \]</p>
+
+<p>Same structure, except we no longer let a fixed \(\pi\) choose the action — we take the best one. And the optimal policy just reads off the argmax:</p>
+
+<p>\[ \pi^*(s) = \arg\max_{a \in A} \sum_{s'} P_{sa}(s')\,V^*(s') \]</p>
+
+<p>The fact I find genuinely surprising: \(V^*(s) = V^{\pi^*}(s) \geq V^\pi(s)\) for <em>every</em> \(s\) and every \(\pi\). One single policy is simultaneously optimal from every starting state. There is no "if I start here, strategy A is better, but if I start there, strategy B is" — the same \(\pi^*\) dominates everywhere.</p>
+
+<p class="sidenote">
+  <span class="sn-label">why one policy suffices</span>
+  Because \(V^*\) is defined per-state and \(\pi^*\) is defined by a per-state argmax. The choice at \(s\) only ever depends on \(s\) and on \(V^*\), never on how you arrived. That's the Markov property doing its work — the state is a sufficient statistic for the future.
+</p>
+
+<h2><span class="num">3</span>Value iteration and policy iteration</h2>
+
+<p><strong>Value iteration</strong> is the Bellman optimality equation used as an assignment instead of an equation:</p>
+
+<ol>
+  <li>Set \(V(s) := 0\) for all \(s\).</li>
+  <li>Repeat until convergence: \(\;V(s) := R(s) + \max_a \gamma \sum_{s'} P_{sa}(s') V(s')\).</li>
+</ol>
+
+<p>You can do the sweep <em>synchronously</em> (compute all new values, then overwrite) or <em>asynchronously</em> (update in place, one state at a time). Both converge to \(V^*\).</p>
+
+<p><strong>Policy iteration</strong> alternates instead:</p>
+
+<ol>
+  <li>Initialise \(\pi\) randomly.</li>
+  <li>Repeat: (a) compute \(V := V^\pi\) by solving the linear system; (b) set \(\pi(s) := \arg\max_a \sum_{s'} P_{sa}(s')V(s')\).</li>
+</ol>
+
+<p>Step (b) is called making \(\pi\) <em>greedy</em> with respect to \(V\). The two steps chase each other: evaluate the policy exactly, then improve it against that evaluation.</p>
+
+<table>
+  <tr><th></th><th>Value iteration</th><th>Policy iteration</th></tr>
+  <tr><td>Per-iteration cost</td><td>cheap (one sweep)</td><td>expensive (solve \(|S|\) linear equations)</td></tr>
+  <tr><td>Number of iterations</td><td>more</td><td>very few</td></tr>
+  <tr><td>Good when</td><td>\(|S|\) is <strong>large</strong></td><td>\(|S|\) is <strong>small</strong></td></tr>
+</table>
+
+<p>The tradeoff is exactly the one in my notes: policy iteration converges in remarkably few iterations, but each one requires inverting a system of size \(|S|\). Blow up the state space and that becomes intolerable, so value iteration wins in practice.</p>
+
+<p class="sidenote">
+  <span class="sn-label">why value iteration converges</span>
+  The Bellman backup is a \(\gamma\)-contraction in the sup norm: \(\|BV_1 - BV_2\|_\infty \le \gamma \|V_1 - V_2\|_\infty\). Banach gives a unique fixed point and geometric convergence to it. The discount factor isn't just a modelling choice — it's what makes the operator a contraction at all.
+</p>
+
+<h2><span class="num">4</span>When you don't know \(P_{sa}\)</h2>
+
+<p>Everything above assumed we know the transition probabilities and the reward. Usually we don't. But we can run trials and count:</p>
+
+<p>\[ P_{sa}(s') = \frac{\#\{\text{took } a \text{ in } s \text{ and landed in } s'\}}{\#\{\text{took } a \text{ in } s\}} \]</p>
+
+<p>which is the maximum likelihood estimate. If the ratio is \(0/0\) — we've never tried \(a\) in \(s\) — we fall back to \(1/|S|\), the uniform distribution. Same trick as Laplace smoothing: a uniform prior wearing a different hat.</p>
+
+<div class="callout">
+  <span class="label">The question I kept circling</span>
+  Why keep the numerator and denominator counts around separately, instead of just storing the probabilities?
+</div>
+
+<p>Because <strong>counts are the sufficient statistic and probabilities aren't</strong>. New experience arrives as a single increment: <code>num[s,a,s'] += 1</code>, <code>den[s,a] += 1</code>. Cheap, exact, and order-independent.</p>
+
+<p>If instead you stored the normalised distribution, then to fold in one new observation you'd have to un-normalise, add, and re-normalise across the whole row of \(|S|\) entries — and you'd have destroyed the information about <em>how much</em> evidence you had. A row that says \((0.5, 0.5)\) is a completely different epistemic state depending on whether it came from 2 samples or 2000. The counts remember; the probabilities forget. So you accumulate counts continuously and divide only when you actually need \(P_{sa}\), which is periodic and comparatively expensive.</p>
+
+<h3>Putting it together</h3>
+
+<p>Model learning and value iteration slot into a single loop:</p>
+
+<figure>
+<svg viewBox="0 0 660 250" xmlns="http://www.w3.org/2000/svg" font-family="JetBrains Mono, monospace" font-size="12.5">
+  <defs>
+    <marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+      <path d="M0,0 L7,3.2 L0,6.4 z" fill="#57544C"/>
+    </marker>
+    <marker id="arr" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+      <path d="M0,0 L7,3.2 L0,6.4 z" fill="#C4142A"/>
+    </marker>
+  </defs>
+
+  <rect x="24" y="96" width="122" height="56" rx="4" fill="none" stroke="#1B1B18" stroke-width="1.2"/>
+  <text x="85" y="118" text-anchor="middle" fill="#1B1B18">execute &#960;</text>
+  <text x="85" y="136" text-anchor="middle" fill="#8A877D">n trials</text>
+
+  <rect x="186" y="96" width="122" height="56" rx="4" fill="none" stroke="#1B1B18" stroke-width="1.2"/>
+  <text x="247" y="118" text-anchor="middle" fill="#1B1B18">update counts</text>
+  <text x="247" y="136" text-anchor="middle" fill="#8A877D">→ P, R</text>
+
+  <rect x="348" y="96" width="132" height="56" rx="4" fill="none" stroke="#1B1B18" stroke-width="1.2"/>
+  <text x="414" y="118" text-anchor="middle" fill="#1B1B18">value iteration</text>
+  <text x="414" y="136" text-anchor="middle" fill="#8A877D">→ V</text>
+
+  <rect x="520" y="96" width="116" height="56" rx="4" fill="none" stroke="#1B1B18" stroke-width="1.2"/>
+  <text x="578" y="118" text-anchor="middle" fill="#1B1B18">greedy &#960;</text>
+  <text x="578" y="136" text-anchor="middle" fill="#8A877D">w.r.t. V</text>
+
+  <line x1="148" y1="124" x2="182" y2="124" stroke="#57544C" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="310" y1="124" x2="344" y2="124" stroke="#57544C" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="482" y1="124" x2="516" y2="124" stroke="#57544C" stroke-width="1.2" marker-end="url(#ar)"/>
+
+  <path d="M578 96 C 578 40, 85 40, 85 92" fill="none" stroke="#57544C" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="331" y="34" text-anchor="middle" fill="#8A877D">repeat</text>
+
+  <path d="M414 152 C 414 200, 414 200, 414 200" fill="none" stroke="#C4142A" stroke-width="1.1" stroke-dasharray="3 3" marker-end="url(#arr)"/>
+  <text x="414" y="220" text-anchor="middle" fill="#C4142A">warm-start from previous V,</text>
+  <text x="414" y="236" text-anchor="middle" fill="#C4142A">not from V = 0</text>
+</svg>
+<figcaption>The outer loop. The dashed note is the one real optimisation: re-initialising value iteration<br>at the previous solution instead of zero, since the model barely moved between rounds.</figcaption>
+</figure>
+
+<p>That warm-start matters more than it looks. Each pass through the loop nudges \(P_{sa}\) slightly, so \(V^*\) for the new model is close to \(V^*\) for the old one. Starting from \(V=0\) throws away a nearly-correct answer and re-derives it from scratch.</p>
+
+<p class="sidenote">
+  <span class="sn-label">plot it on a log axis</span>
+  As the model improves, the number of steps before failure grows roughly geometrically — early gains are a handful of steps, later ones are hundreds. On a linear axis the early learning is invisible against the late spike. Log-\(y\) makes the whole curve legible.
+</p>
+
+<figure>
+<svg viewBox="0 0 560 230" xmlns="http://www.w3.org/2000/svg" font-family="JetBrains Mono, monospace" font-size="11.5">
+  <line x1="62" y1="26" x2="62" y2="186" stroke="#1B1B18" stroke-width="1.1"/>
+  <line x1="62" y1="186" x2="512" y2="186" stroke="#1B1B18" stroke-width="1.1"/>
+  <g stroke="rgba(27,27,24,0.12)" stroke-width="1">
+    <line x1="62" y1="146" x2="512" y2="146"/>
+    <line x1="62" y1="106" x2="512" y2="106"/>
+    <line x1="62" y1="66" x2="512" y2="66"/>
+  </g>
+  <text x="54" y="190" text-anchor="end" fill="#8A877D">10</text>
+  <text x="54" y="150" text-anchor="end" fill="#8A877D">10²</text>
+  <text x="54" y="110" text-anchor="end" fill="#8A877D">10³</text>
+  <text x="54" y="70" text-anchor="end" fill="#8A877D">10⁴</text>
+  <path d="M70 180 L120 172 L165 160 L210 141 L255 128 L300 104 L345 92 L390 74 L440 62 L500 52"
+        fill="none" stroke="#C4142A" stroke-width="1.8" stroke-linejoin="round"/>
+  <text x="287" y="216" text-anchor="middle" fill="#57544C">trials</text>
+  <text x="18" y="106" text-anchor="middle" fill="#57544C" transform="rotate(-90 18 106)">steps to failure</text>
+</svg>
+<figcaption>Roughly straight on a log axis — which is the point. Exponential improvement<br>looks like nothing at all until it suddenly looks like everything.</figcaption>
+</figure>
+
+<h2><span class="num">5</span>Continuous states: the wall</h2>
+
+<p>Everything so far assumed a finite table of states. A car has state \((x, y, \theta, \dot x, \dot y, \dot\theta) \in \mathbb{R}^6\). The inverted pendulum from PS4 has \((x, \theta, \dot x, \dot\theta)\). A helicopter has twelve dimensions. There is no table.</p>
+
+<h3>Option 1: discretize</h3>
+
+<p>Chop \(\mathbb{R}^d\) into a grid, treat each cell as a discrete state, run value iteration. Simple, and it genuinely works — but it fails in two distinct ways.</p>
+
+<p><strong>Bad representation.</strong> A grid forces \(V\) to be piecewise constant. Consider a dataset that a straight line fits perfectly; a piecewise-constant fit on the same data is a staircase. No smoothing within a cell, no generalisation across cells. To approximate a smooth function you need absurdly fine cells.</p>
+
+<figure>
+<svg viewBox="0 0 560 190" xmlns="http://www.w3.org/2000/svg" font-family="JetBrains Mono, monospace" font-size="11">
+  <g transform="translate(0,0)">
+    <line x1="40" y1="20" x2="40" y2="150" stroke="#1B1B18" stroke-width="1.1"/>
+    <line x1="40" y1="150" x2="250" y2="150" stroke="#1B1B18" stroke-width="1.1"/>
+    <g fill="#1B1B18">
+      <circle cx="62" cy="136" r="2.6"/><circle cx="88" cy="122" r="2.6"/>
+      <circle cx="114" cy="112" r="2.6"/><circle cx="140" cy="94" r="2.6"/>
+      <circle cx="166" cy="80" r="2.6"/><circle cx="192" cy="64" r="2.6"/>
+      <circle cx="218" cy="50" r="2.6"/>
+    </g>
+    <line x1="56" y1="140" x2="226" y2="46" stroke="#C4142A" stroke-width="1.6"/>
+    <text x="145" y="176" text-anchor="middle" fill="#57544C">linear fit — fine</text>
+  </g>
+  <g transform="translate(290,0)">
+    <line x1="40" y1="20" x2="40" y2="150" stroke="#1B1B18" stroke-width="1.1"/>
+    <line x1="40" y1="150" x2="250" y2="150" stroke="#1B1B18" stroke-width="1.1"/>
+    <g stroke="rgba(27,27,24,0.12)" stroke-width="1">
+      <line x1="75" y1="20" x2="75" y2="150"/><line x1="127" y1="20" x2="127" y2="150"/>
+      <line x1="179" y1="20" x2="179" y2="150"/><line x1="231" y1="20" x2="231" y2="150"/>
+    </g>
+    <g fill="#1B1B18">
+      <circle cx="62" cy="136" r="2.6"/><circle cx="88" cy="122" r="2.6"/>
+      <circle cx="114" cy="112" r="2.6"/><circle cx="140" cy="94" r="2.6"/>
+      <circle cx="166" cy="80" r="2.6"/><circle cx="192" cy="64" r="2.6"/>
+      <circle cx="218" cy="50" r="2.6"/>
+    </g>
+    <path d="M45 136 L75 136 L75 117 L127 117 L127 87 L179 87 L179 57 L231 57"
+          fill="none" stroke="#C4142A" stroke-width="1.6"/>
+    <text x="145" y="176" text-anchor="middle" fill="#57544C">piecewise constant — staircase</text>
+  </g>
+</svg>
+<figcaption>The same data, two representations. Discretization commits you to the right-hand picture<br>for the value function, whatever the true \(V^*\) looks like.</figcaption>
+</figure>
+
+<p><strong>Curse of dimensionality.</strong> Discretize each of \(d\) dimensions into \(k\) values and you get \(k^d\) states. With \(d = 10\) and \(k = 100\) that's \(10^{20}\) — not representable on any machine. Rule of thumb: discretization is excellent in 1D and 2D, workable up to about 4D with care, occasionally 6D if you're clever and lucky, and hopeless above that.</p>
+
+<h3>Option 2: approximate \(V^*\) directly</h3>
+
+<p>Instead of chopping up the state space, parametrise the value function:</p>
+
+<p>\[ V(s) = \theta^T \phi(s) \]</p>
+
+<p>Now \(V\) is stored in a handful of numbers rather than a table indexed by state. Generalisation comes for free — nearby states get nearby values because \(\phi\) is smooth.</p>
+
+<h2><span class="num">6</span>Needing a simulator</h2>
+
+<p>To do this we need to sample next-states, which means a <strong>model</strong>: a black box taking \((s_t, a_t)\) and returning \(s_{t+1} \sim P_{s_t a_t}\).</p>
+
+<p>Two ways to get one. Write the physics — for the inverted pendulum you know the pole's mass and length, so you can compute the next state directly. Or <em>learn</em> it from trials, which is just supervised learning again. Fit</p>
+
+<p>\[ s_{t+1} = A s_t + B a_t \]</p>
+
+<p>by least squares over all recorded transitions:</p>
+
+<p>\[ \arg\min_{A,B} \sum_{i=1}^{n} \sum_{t=0}^{T-1} \left\| s^{(i)}_{t+1} - \left( A s^{(i)}_t + B a^{(i)}_t \right) \right\|_2^2 \]</p>
+
+<p>which is the MLE under Gaussian noise. Keep it <strong>deterministic</strong> and \(s_{t+1}\) is fully determined; make it <strong>stochastic</strong> by adding \(\epsilon_t \sim \mathcal{N}(0,\Sigma)\). Nothing forces linearity — \(s_{t+1} = A\phi_s(s_t) + B\phi_a(a_t)\), or locally weighted regression, work the same way.</p>
+
+<p class="sidenote">
+  <span class="sn-label">notice the recursion</span>
+  We've turned an RL problem into a supervised-learning problem twice over: once to learn the dynamics, once to fit the value function. RL isn't a replacement for supervised learning so much as a scaffolding built out of it.
+</p>
+
+<h2><span class="num">7</span>Fitted value iteration</h2>
+
+<p>Now the assembly. In the continuous case the Bellman update is</p>
+
+<p>\[ V(s) := R(s) + \gamma \max_a \int_{s'} P_{sa}(s') V(s')\,ds' = R(s) + \gamma \max_a \mathbb{E}_{s' \sim P_{sa}}[V(s')] \]</p>
+
+<p>Two things are impossible here: we can't do this for <em>every</em> \(s\), and we can't evaluate the integral. Fitted value iteration approximates both.</p>
+
+<ol>
+  <li>Sample \(n\) states \(s^{(1)}, \ldots, s^{(n)}\) at random. Set \(\theta := 0\).</li>
+  <li>Repeat:
+    <ul>
+      <li>For each \(i\), and each action \(a\): sample \(s'_1, \ldots, s'_k \sim P_{s^{(i)}a}\) from the simulator and set \(q(a) = \frac{1}{k}\sum_{j=1}^{k}\left[ R(s^{(i)}) + \gamma V(s'_j) \right]\).</li>
+      <li>Set \(y^{(i)} = \max_a q(a)\).</li>
+      <li>Set \(\theta := \arg\min_\theta \frac{1}{2}\sum_{i=1}^n \left( \theta^T\phi(s^{(i)}) - y^{(i)} \right)^2\).</li>
+    </ul>
+  </li>
+</ol>
+
+<blockquote>The whole trick is in the last line. Discrete value iteration writes \(V(s^{(i)}) := y^{(i)}\) into a table. Here we can't, so we do the next best thing — treat \(\{(s^{(i)}, y^{(i)})\}\) as a supervised training set and <em>regress</em> \(V\) onto it.</blockquote>
+
+<p>So \(s\) plays the role of \(x\), the Bellman target \(y^{(i)}\) plays the role of \(y\), and any regression algorithm slots in. The \(k\) samples are there only to Monte-Carlo the expectation; with a deterministic simulator you set \(k = 1\) and it's exact.</p>
+
+<p>Acting is the same machinery once more:</p>
+
+<p>\[ \arg\max_a \mathbb{E}_{s' \sim P_{sa}}[V(s')] \;\approx\; \arg\max_a V(f(s,a)) \]</p>
+
+<p>where the approximation pushes the expectation inside \(V\) — \(\mathbb{E}[V(s')] \approx V(\mathbb{E}[s'])\) — and ignores the noise. Fine when \(\epsilon_t\) is small, and it saves you \(k|A|\) simulator calls per decision.</p>
+
+<div class="callout">
+  <span class="label">The honest caveat</span>
+  Fitted value iteration has <strong>no convergence proof</strong>. Discrete value iteration converges because the Bellman backup is a \(\gamma\)-contraction. Here we compose that backup with a regression step, and the projection onto the span of \(\phi\) can expand distances. Contraction \(\circ\) expansion is not a contraction, so the fixed-point argument dies. In practice it usually converges anyway.
+</div>
+
+<p>That's the shape of the whole lecture, really. Every guarantee we had in the tabular case — exact Bellman solves, contraction, convergence to \(V^*\) — was bought with the assumption that we could enumerate the states. Give that up and you keep the algorithm but lose the theorem.</p>
+
+<footer>
+  CS229 &middot; Lecture 12 &middot; notes 12 (Reinforcement Learning and Control)<br>
+  Next: PCA — and the reason \(u u^T x\) keeps showing up.
+</footer>
+
+</div>
+</body>
+</html>
