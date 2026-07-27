@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Never write down the features — CS229 Lecture 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+  chtml: { scale: 1.0 },
+  options: { renderActions: { addMenu: [] } }
+};
+</script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+<style>
+  :root{
+    --paper:#FBFAF6;
+    --ink:#1B1B18;
+    --ink-soft:#57544C;
+    --ink-faint:#8A877D;
+    --pen:#C4142A;
+    --pen-soft:rgba(196,20,42,0.07);
+    --rule:rgba(27,27,24,0.14);
+    --grid:rgba(27,27,24,0.045);
+    --maxcol:700px;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:26px 26px;
+    color:var(--ink);
+    font-family:'Newsreader', Georgia, serif;
+    font-size:20px;
+    line-height:1.66;
+    font-weight:400;
+  }
+  .wrap{max-width:964px;margin:0 auto;padding:0 32px 120px;}
+  .col{max-width:var(--maxcol);position:relative;}
+
+  .backlink{
+    max-width:var(--maxcol);
+    padding:38px 0 0;
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:14px;
+    letter-spacing:0.04em;
+  }
+  .backlink a{color:var(--ink-faint);text-decoration:none;border-bottom:1px solid transparent;}
+  .backlink a:hover{color:var(--pen);border-bottom-color:var(--pen);}
+
+  header{padding:56px 0 10px;}
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--pen);
+  }
+  h1{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:46px;
+    line-height:1.12;
+    font-weight:700;
+    letter-spacing:-0.02em;
+    margin:14px 0 16px;
+  }
+  .standfirst{
+    font-size:21px;
+    color:var(--ink-soft);
+    font-style:italic;
+    margin:0 0 26px;
+  }
+  .byline{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    color:var(--ink-faint);
+    letter-spacing:0.04em;
+    border-top:1px solid var(--rule);
+    padding-top:14px;
+  }
+
+  h2{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:27px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    margin:64px 0 6px;
+    line-height:1.24;
+  }
+  h3{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:19px;
+    font-weight:500;
+    margin:40px 0 4px;
+  }
+  .num{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:1.55em;height:1.55em;
+    border:1.5px solid var(--pen);
+    border-radius:50%;
+    color:var(--pen);
+    font-size:0.62em;
+    font-family:'JetBrains Mono', monospace;
+    vertical-align:0.22em;
+    margin-right:0.5em;
+  }
+  p{margin:1.05em 0;}
+  strong{font-weight:500;color:var(--ink);}
+  em{font-style:italic;}
+  code{
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.84em;
+    background:var(--pen-soft);
+    padding:1px 5px;
+    border-radius:3px;
+  }
+  a{color:var(--ink);text-decoration-color:var(--pen);text-underline-offset:3px;}
+
+  .lede{border-left:2px solid var(--pen);padding-left:18px;margin:26px 0;color:var(--ink-soft);}
+
+  .sn{
+    position:absolute;
+    left:calc(var(--maxcol) + 26px);
+    width:172px;
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:14px;
+    line-height:1.5;
+    color:var(--pen);
+    border-top:1.5px solid var(--pen);
+    padding-top:8px;
+  }
+  .sn b{font-weight:700;display:block;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px;}
+
+  .rule{border:0;border-top:1px solid var(--rule);margin:56px 0;}
+
+  figure{margin:38px 0;}
+  figcaption{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:14px;
+    color:var(--ink-faint);
+    margin-top:10px;
+  }
+
+  .algo{
+    border:1px solid var(--rule);
+    background:rgba(255,255,255,0.55);
+    padding:20px 24px;
+    margin:30px 0;
+    font-size:18.5px;
+  }
+  .algo .tag{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--pen);
+    display:block;
+    margin-bottom:10px;
+  }
+  .algo ol{margin:0;padding-left:20px;}
+  .algo li{margin:8px 0;}
+  .algo p:first-of-type{margin-top:0;}
+
+  mjx-container[display="true"]{margin:1.2em 0 !important;}
+  mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%;}
+
+  .kkt{
+    list-style:none;
+    padding:0;
+    margin:22px 0;
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:17px;
+  }
+  .kkt li{
+    border-left:2px solid var(--rule);
+    padding:2px 0 2px 16px;
+    margin:12px 0;
+  }
+  .kkt li span{
+    display:block;
+    font-size:14px;
+    color:var(--ink-faint);
+    margin-top:2px;
+  }
+
+  .end{
+    font-family:'JetBrains Mono', monospace;
+    color:var(--pen);
+    font-size:15px;
+    letter-spacing:0.2em;
+    margin-top:56px;
+  }
+
+  @media (max-width:940px){
+    body{font-size:18.5px;}
+    .wrap{padding:0 22px 90px;}
+    h1{font-size:34px;}
+    h2{font-size:23px;}
+    .sn{
+      position:static;
+      width:auto;
+      margin:22px 0;
+      border-top:0;
+      border-left:2px solid var(--pen);
+      padding:2px 0 2px 14px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="backlink"><a href="/cs229/">← CS229 notes</a></div>
+
+  <div class="col">
+  <header>
+    <div class="eyebrow">Lecture 3</div>
+    <h1>Never write down the features</h1>
+    <p class="standfirst">Kernels and SVMs, read as one idea: stop storing the thing you think you're learning, and store the coefficients that reconstruct it.</p>
+    <div class="byline">Pratyush · CS229 · kernels · duality · SVM · SMO</div>
+  </header>
+
+  <p>Linear regression fits \(\theta^T x\). If the truth is a cubic, that's useless — but only if you insist that \(x\) is the thing you regress on. Write</p>
+
+  \[ \phi(x) = \begin{bmatrix} 1 \\ x \\ x^2 \\ x^3 \end{bmatrix} \in \mathbb{R}^4, \qquad \theta_3 x^3 + \theta_2 x^2 + \theta_1 x + \theta_0 = \theta^T \phi(x) \]
+
+  <p>and the cubic <em>is</em> linear — in \(\phi(x)\). The raw input \(x\) is the <strong>attribute</strong>, \(\phi(x)\) is the <strong>feature</strong>, and \(\phi : \mathbb{R}^d \to \mathbb{R}^p\) is the feature map. Nothing about the algorithm changes; every \(x^{(i)}\) in the LMS update just becomes \(\phi(x^{(i)})\):</p>
+
+  \[ \theta := \theta + \alpha \sum_{i=1}^{n}\left(y^{(i)} - \theta^T\phi(x^{(i)})\right)\phi(x^{(i)}) \]
+
+  <p>So expressiveness is free. Except it isn't, and the rest of the lecture is the bill.</p>
+
+  <hr class="rule">
+
+  <h2><span class="num">1</span>The bill</h2>
+
+  <p>Take \(x \in \mathbb{R}^d\) and let \(\phi(x)\) hold every monomial of degree \(\le 3\). Then \(p \sim d^3\). At \(d = 1000\) that's a \(10^9\)-dimensional vector you have to compute, store, and update <em>every single step</em>. Six orders of magnitude worse than plain least squares.</p>
+
+  <p>And the reason looks unavoidable: \(\theta\) itself lives in \(\mathbb{R}^p\). If the parameter has \(10^9\) entries, surely you have to keep \(10^9\) numbers.</p>
+
+  <p class="lede">Unless you don't store \(\theta\).</p>
+
+  <hr class="rule">
+
+  <h2><span class="num">2</span>Store \(\beta\), not \(\theta\)</h2>
+
+  <p>Initialise \(\theta = 0\) and watch what the update rule can and cannot produce. At step zero, \(\theta = \sum_i 0\cdot\phi(x^{(i)})\). Suppose at some point</p>
+
+  \[ \theta = \sum_{i=1}^{n} \beta_i \phi(x^{(i)}). \]
+
+  <p class="sn"><b>Not an assumption</b>This is proved by induction from the update rule plus \(\theta=0\). Every increment is a combination of the \(\phi(x^{(i)})\), so \(\theta\) can never leave their span.</p>
+
+  <p>The next update adds \(\alpha\sum_i (y^{(i)} - \theta^T\phi(x^{(i)}))\,\phi(x^{(i)})\) — which is, again, a linear combination of exactly the same \(n\) vectors. So the form survives, with</p>
+
+  \[ \beta_i := \beta_i + \alpha\left(y^{(i)} - \theta^T\phi(x^{(i)})\right). \]
+
+  <p><strong>\(\theta\) is confined to the span of the training features, forever.</strong> Gradient descent never had the ability to step outside it. So instead of \(p\) numbers, keep \(n\) numbers — the coefficients \(\beta_1,\dots,\beta_n\) — and treat them as the parameters.</p>
+
+  <p class="sn"><b>When this actually helps</b>Only when \(p \gg n\). If you have more data than features, \(\beta\) is the <em>bigger</em> object and the "confinement" buys you nothing.</p>
+
+  <p>Worth being honest about what this is. The primal stores \(\theta \in \mathbb{R}^p\); the dual stores \(\beta \in \mathbb{R}^n\). It's a change of what you write down, not a change of model — the same function is being fit either way. It's a win precisely when the feature space is huge and the dataset is small.</p>
+
+  <h3>The inner product falls out</h3>
+
+  <p>Substituting \(\theta = \sum_j \beta_j \phi(x^{(j)})\) into the \(\beta\) update:</p>
+
+  \[ \beta_i := \beta_i + \alpha\left(y^{(i)} - \sum_{j=1}^{n} \big\langle \phi(x^{(j)}), \phi(x^{(i)}) \big\rangle \beta_j \right) \]
+
+  <p>Look at what survives. \(\phi\) appears <em>only</em> inside an inner product. Never alone, never as a coordinate you have to read. That's the opening.</p>
+
+  <p>Because for the degree-\(\le 3\) map, that inner product collapses:</p>
+
+  \[ \langle \phi(x),\phi(z)\rangle = 1 + \langle x,z\rangle + \langle x,z\rangle^2 + \langle x,z\rangle^3 \]
+
+  <p>Compute \(\langle x,z\rangle\) in \(O(d)\), then a constant number of multiplications. <strong>\(O(d)\) instead of \(O(d^3)\), and \(\phi(x)\) is never built.</strong> Define</p>
+
+  \[ K(x,z) \triangleq \langle \phi(x), \phi(z)\rangle \]
+
+  <div class="algo">
+    <span class="tag">Kernelised LMS</span>
+    <ol>
+      <li>Precompute \(K_{ij} = K(x^{(i)}, x^{(j)})\) for all \(i,j\). Set \(\beta := 0\).</li>
+      <li>Loop: \(\;\beta := \beta + \alpha(\vec{y} - K\beta)\)</li>
+      <li>Predict: \(\;\theta^T\phi(x) = \sum_{i=1}^{n}\beta_i K(x^{(i)}, x)\)</li>
+    </ol>
+  </div>
+
+  <p>\(O(n)\) per update once \(K\) is built, and \(O(n^2 d)\) to build it. The prediction rule is the tell: to score a new point you never touch \(\theta\), you just ask how similar \(x\) is to each training point.</p>
+
+  <hr class="rule">
+
+  <h2><span class="num">3</span>What makes a kernel a kernel</h2>
+
+  <p>Now flip the interface. The algorithm above never mentions \(\phi\). So why start from \(\phi\) at all? Just pick a function \(K\) directly — you only need \(\phi\) to <em>exist</em>, not to be writable.</p>
+
+  <p>The second reading of \(K\) makes this feel natural: an inner product is a <strong>similarity measure</strong>. \(K(x,z)\) is large when the two points look alike in feature space, near zero when they're nearly orthogonal. So design similarity, not coordinates. The Gaussian / RBF kernel</p>
+
+  \[ K(x,z) = \exp\left(-\frac{\lVert x-z\rVert^2}{2\sigma^2}\right) \]
+
+  <p>is exactly this: 1 when \(x=z\), decaying to 0 as they separate. And the \(\phi\) behind it is <em>infinite-dimensional</em> — a thing you could not have written down even in principle. You get it anyway.</p>
+
+  <h3>Mercer's condition</h3>
+
+  <p>So which \(K\) are legal? Build the kernel matrix \(K_{ij} = K(x^{(i)},x^{(j)})\) on any finite set of points. If \(K\) is valid, then \(K_{ij} = \phi(x^{(i)})^T\phi(x^{(j)}) = K_{ji}\), so it's <strong>symmetric</strong>. And for any \(z\),</p>
+
+  \[ z^T K z = \sum_k \left(\sum_i z_i \phi_k(x^{(i)})\right)^{\!2} \;\ge\; 0 \]
+
+  <p class="sn"><b>Necessary and sufficient</b>Rare and useful. Symmetric + PSD isn't just implied by validity — it's a complete characterisation. Check it, and \(\phi\) is guaranteed to exist.</p>
+
+  <p>so it's <strong>positive semi-definite</strong>. Those are the necessary conditions, and Mercer's theorem says they're also sufficient: symmetric PSD kernel matrix for every finite set \(\iff\) some \(\phi\) exists.</p>
+
+  <p>You never have to find \(\phi\). You only have to check two properties of a matrix.</p>
+
+  <p>And the general lesson is bigger than regression: <strong>any algorithm you can write using only inner products \(\langle x,z\rangle\) can be kernelised</strong> by swapping in \(K(x,z)\). Perceptron, PCA, and the one this was really built for —</p>
+
+  <hr class="rule">
+
+  <h2><span class="num">4</span>SVMs: the geometric one</h2>
+
+  <p>Everything so far was algebra about storage. SVMs are the one algorithm in the course where the driving idea is genuinely <em>geometric</em>: don't just separate the classes, separate them with as much clearance as you can.</p>
+
+  <p>The intuition is confidence. A point sitting far from the decision boundary is one you'd bet on; a point hugging the boundary could flip under a tiny perturbation of \(w\). So maximise the distance from the boundary to the nearest point. And this is where the kernel comes back in: <strong>climb into higher dimensions and separability gets easier</strong> — more room, more directions along which the classes can come apart.</p>
+
+  <figure>
+    <svg viewBox="0 0 620 340" width="100%" role="img" aria-label="A maximum margin separating hyperplane with dashed margin lines and three support vectors highlighted">
+      <line x1="80" y1="250" x2="560" y2="90" stroke="#1B1B18" stroke-width="1.6"/>
+      <line x1="67" y1="212" x2="547" y2="52" stroke="#1B1B18" stroke-width="1" stroke-dasharray="5 5" opacity="0.55"/>
+      <line x1="93" y1="288" x2="573" y2="128" stroke="#1B1B18" stroke-width="1" stroke-dasharray="5 5" opacity="0.55"/>
+
+      <g stroke="#1B1B18" stroke-width="1.6">
+        <path d="M195,114 l10,10 M205,114 l-10,10"/>
+        <path d="M295,84 l10,10 M305,84 l-10,10"/>
+        <path d="M395,54 l10,10 M405,54 l-10,10"/>
+        <path d="M345,124 l10,10 M355,124 l-10,10"/>
+        <path d="M465,74 l10,10 M475,74 l-10,10"/>
+      </g>
+      <g fill="none" stroke="#1B1B18" stroke-width="1.4">
+        <circle cx="165" cy="292" r="6"/>
+        <circle cx="225" cy="308" r="6"/>
+        <circle cx="285" cy="300" r="6"/>
+        <circle cx="365" cy="288" r="6"/>
+        <circle cx="205" cy="258" r="6"/>
+      </g>
+
+      <g stroke="#C4142A" stroke-width="2">
+        <path d="M245,146 l10,10 M255,146 l-10,10"/>
+        <path d="M425,86 l10,10 M435,86 l-10,10"/>
+      </g>
+      <circle cx="300" cy="219" r="6" fill="none" stroke="#C4142A" stroke-width="2"/>
+      <circle cx="250" cy="151" r="12" fill="none" stroke="#C4142A" stroke-width="1" opacity="0.45"/>
+      <circle cx="430" cy="91" r="12" fill="none" stroke="#C4142A" stroke-width="1" opacity="0.45"/>
+      <circle cx="300" cy="219" r="12" fill="none" stroke="#C4142A" stroke-width="1" opacity="0.45"/>
+
+      <line x1="263" y1="189" x2="251" y2="153" stroke="#C4142A" stroke-width="1.6"/>
+      <text x="268" y="180" font-family="'JetBrains Mono', monospace" font-size="15" fill="#C4142A">γ</text>
+    </svg>
+    <figcaption>Only the circled points touch the margin. Everything else could be deleted and the boundary would not move.</figcaption>
+  </figure>
+
+  <h3>Functional vs geometric margin</h3>
+
+  <p>Switch to \(y \in \{-1,1\}\) and \(h_{w,b}(x) = g(w^Tx+b)\), splitting the intercept out. The <strong>functional margin</strong> of an example is</p>
+
+  \[ \hat\gamma^{(i)} = y^{(i)}\left(w^Tx^{(i)} + b\right) \]
+
+  <p>Positive means correct, large means confident. Except it's a fake measure — and this is the bit worth internalising. \(g\) only reads the <em>sign</em> of \(w^Tx+b\), so replacing \((w,b)\) with \((cw,cb)\) for \(c>0\) changes nothing about the classifier but multiplies the margin by \(c\). <strong>You can inflate your own confidence by rescaling.</strong> That's cheating.</p>
+
+  <p class="sn"><b>Fix</b>Normalise: \(w \to w/\lVert w\rVert\), \(b \to b/\lVert w\rVert\). The geometric margin is scale-invariant because the cheat divides out.</p>
+
+  <p>The <strong>geometric margin</strong> divides it out — it's the actual perpendicular distance to the hyperplane:</p>
+
+  \[ \gamma^{(i)} = y^{(i)}\left(\left(\frac{w}{\lVert w\rVert}\right)^{\!T} x^{(i)} + \frac{b}{\lVert w\rVert}\right), \qquad \gamma = \min_i \gamma^{(i)} \]
+
+  <p>Maximise \(\gamma\) subject to every point clearing it, plus \(\lVert w\rVert = 1\). Correct, and unsolvable — that norm constraint is non-convex.</p>
+
+  <p>The escape uses the cheat as a tool rather than fighting it. Since scaling is free, just <em>spend</em> it: demand \(\hat\gamma = 1\). Then \(\gamma = 1/\lVert w\rVert\), maximising that is minimising \(\lVert w\rVert^2\), and:</p>
+
+  \[ \min_{w,b} \tfrac{1}{2}\lVert w\rVert^2 \quad \text{s.t.} \quad y^{(i)}(w^Tx^{(i)}+b) \ge 1 \]
+
+  <p>Convex quadratic objective, linear constraints. Solvable. The degree of freedom that made the functional margin meaningless is exactly the degree of freedom that buys convexity.</p>
+
+  <h3>The dual, again</h3>
+
+  <p>We could stop here and hand it to a QP solver. We don't, and the reason is the same as in §2: we want the \(n\)-sized description, not the \(d\)-sized one, because that's where the kernel plugs in.</p>
+
+  <p>Form the Lagrangian, minimise over \(w,b\), and you get \(w = \sum_i \alpha_i y^{(i)} x^{(i)}\) — \(w\) is spanned by the data, same story as \(\theta = \sum\beta_i\phi(x^{(i)})\). Substitute back:</p>
+
+  \[ \max_\alpha \; W(\alpha) = \sum_{i=1}^{n}\alpha_i - \frac12\sum_{i,j=1}^{n} y^{(i)}y^{(j)}\alpha_i\alpha_j \langle x^{(i)}, x^{(j)}\rangle \]
+  \[ \text{s.t.} \quad \alpha_i \ge 0, \qquad \sum_i \alpha_i y^{(i)} = 0 \]
+
+  <p>The data enters only through \(\langle x^{(i)},x^{(j)}\rangle\). Swap in \(K\) and you're running an SVM in an infinite-dimensional space at finite cost. That was the whole point of the detour.</p>
+
+  <p>Two facts about duality that are worth keeping separate. <strong>Weak duality always holds:</strong> \(\max\min L \le \min\max L\), for any problem, no conditions. <strong>Strong duality</strong> (\(d^\ast = p^\ast\)) needs convexity, affine equality constraints, and feasibility — which our problem satisfies. Then the solution is characterised by KKT:</p>
+
+  <ul class="kkt">
+    <li>Primal feasibility <span>the original constraints hold</span></li>
+    <li>Dual feasibility <span>\(\alpha_i \ge 0\)</span></li>
+    <li>Stationarity <span>\(\nabla_w L = 0\)</span></li>
+    <li>Complementary slackness <span>\(\alpha_i \, g_i(w) = 0\)</span></li>
+  </ul>
+
+  <p class="sn"><b>Where sparsity comes from</b>Not a regulariser, not a design choice. It's forced by one KKT equation.</p>
+
+  <p>That last one is the payoff. \(\alpha_i g_i(w) = 0\) means: either the constraint is tight, or \(\alpha_i = 0\). A point that isn't sitting exactly on the margin has \(\alpha_i = 0\) and <em>contributes nothing</em>. The surviving handful are the <strong>support vectors</strong>, and</p>
+
+  \[ w^Tx + b = \sum_{i \in SV} \alpha_i y^{(i)} \langle x^{(i)}, x\rangle + b \]
+
+  <p>Prediction touches only those. The boundary is determined by the points that were hardest to classify — and everything comfortably correct is discarded.</p>
+
+  <h3>SMO</h3>
+
+  <p>Last piece: how to actually maximise \(W(\alpha)\). Coordinate ascent is the obvious move — fix everything, optimise one \(\alpha_i\). It fails immediately, and for a nice reason: \(\sum_i \alpha_i y^{(i)} = 0\) means fixing \(n-1\) multipliers <em>determines</em> the last one. There's no freedom left to move.</p>
+
+  <p>So move two at a time. That's SMO:</p>
+
+  <div class="algo">
+    <span class="tag">SMO</span>
+    <ol>
+      <li>Pick the pair \(\alpha_i, \alpha_j\) that most violates KKT — the two worst offenders.</li>
+      <li>Reoptimise \(W\) over those two, holding the rest fixed. The equality constraint pins them to a line, \(\alpha_i y^{(i)} + \alpha_j y^{(j)} = \zeta\), so it's a one-variable quadratic. Solve in closed form.</li>
+      <li>Box constraints force \((\alpha_i,\alpha_j)\) into \([0,C]\times[0,C]\). If the unconstrained optimum falls outside, <strong>clip</strong> it to the allowed interval.</li>
+    </ol>
+  </div>
+
+  <p>(The \(C\) is the soft-margin knob from \(\ell_1\) regularisation: it lets points sit inside the margin at a price, so the whole thing survives non-separable data and doesn't swing wildly for one outlier. Curiously, the only change it makes to the dual is \(0 \le \alpha_i\) becoming \(0 \le \alpha_i \le C\).)</p>
+
+  <p>Line constraint, box constraint, clip. Two-dimensional geometry, done thousands of times.</p>
+
+  <hr class="rule">
+
+  <h2>The one line I'd keep</h2>
+
+  <p>Both halves of this lecture are the same move. In kernel LMS, \(\theta\) is trapped in the span of \(\phi(x^{(i)})\), so store \(\beta \in \mathbb{R}^n\). In the SVM, \(w\) is trapped in the span of \(x^{(i)}\), so store \(\alpha \in \mathbb{R}^n\). Both rewrites leave the data appearing only inside inner products, and that is what lets \(K\) walk in and hand you a feature space you could never have built.</p>
+
+  <p>The kernel trick isn't a trick about kernels. It's a trick about <em>what you refuse to write down</em>.</p>
+
+  <div class="end">— fin —</div>
+  </div>
+
+</div>
+</body>
+</html>
