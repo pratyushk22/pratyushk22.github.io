@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The same subspace, without the model — CS229 Lecture 10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+  chtml: { scale: 1.0 },
+  options: { renderActions: { addMenu: [] } }
+};
+</script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+<style>
+  :root{
+    --paper:#FBFAF6;
+    --ink:#1B1B18;
+    --ink-soft:#57544C;
+    --ink-faint:#8A877D;
+    --pen:#C4142A;
+    --pen-soft:rgba(196,20,42,0.07);
+    --rule:rgba(27,27,24,0.14);
+    --grid:rgba(27,27,24,0.045);
+    --maxcol:700px;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:26px 26px;
+    color:var(--ink);
+    font-family:'Newsreader', Georgia, serif;
+    font-size:20px;
+    line-height:1.66;
+    font-weight:400;
+  }
+  .wrap{max-width:964px;margin:0 auto;padding:0 32px 120px;}
+  .col{max-width:var(--maxcol);position:relative;}
+
+  .backlink{
+    max-width:var(--maxcol);
+    padding:38px 0 0;
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:14px;
+    letter-spacing:0.04em;
+  }
+  .backlink a{color:var(--ink-faint);text-decoration:none;border-bottom:1px solid transparent;}
+  .backlink a:hover{color:var(--pen);border-bottom-color:var(--pen);}
+
+  header{padding:56px 0 10px;}
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--pen);
+  }
+  h1{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:46px;
+    line-height:1.12;
+    font-weight:700;
+    letter-spacing:-0.02em;
+    margin:14px 0 16px;
+  }
+  .standfirst{
+    font-size:21px;
+    color:var(--ink-soft);
+    font-style:italic;
+    margin:0 0 26px;
+  }
+  .byline{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    color:var(--ink-faint);
+    letter-spacing:0.04em;
+    border-top:1px solid var(--rule);
+    padding-top:14px;
+  }
+
+  h2{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:27px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    margin:64px 0 6px;
+    line-height:1.24;
+  }
+  h3{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:19px;
+    font-weight:500;
+    margin:40px 0 4px;
+  }
+  .num{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:1.55em;height:1.55em;
+    border:1.5px solid var(--pen);
+    border-radius:50%;
+    color:var(--pen);
+    font-size:0.62em;
+    font-family:'JetBrains Mono', monospace;
+    vertical-align:0.22em;
+    margin-right:0.5em;
+  }
+  p{margin:1.05em 0;}
+  strong{font-weight:500;color:var(--ink);}
+  em{font-style:italic;}
+  code{
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.84em;
+    background:var(--pen-soft);
+    padding:1px 5px;
+    border-radius:3px;
+  }
+  a{color:var(--ink);text-decoration-color:var(--pen);text-underline-offset:3px;}
+
+  .lede{border-left:2px solid var(--pen);padding-left:18px;margin:26px 0;color:var(--ink-soft);}
+
+  .sn{
+    position:absolute;
+    left:calc(var(--maxcol) + 26px);
+    width:172px;
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:14px;
+    line-height:1.5;
+    color:var(--pen);
+    border-top:1.5px solid var(--pen);
+    padding-top:8px;
+  }
+  .sn b{font-weight:700;display:block;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px;}
+
+  .rule{border:0;border-top:1px solid var(--rule);margin:56px 0;}
+
+  figure{margin:38px 0;}
+  figcaption{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:14px;
+    color:var(--ink-faint);
+    margin-top:10px;
+  }
+
+  .algo{
+    border:1px solid var(--rule);
+    background:rgba(255,255,255,0.55);
+    padding:20px 24px;
+    margin:30px 0;
+    font-size:18.5px;
+  }
+  .algo .tag{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--pen);
+    display:block;
+    margin-bottom:10px;
+  }
+  .algo ol{margin:0;padding-left:20px;}
+  .algo li{margin:8px 0;}
+  .algo p:first-of-type{margin-top:0;}
+  .algo p:last-child{margin-bottom:0;}
+
+  mjx-container[display="true"]{margin:1.2em 0 !important;}
+  mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%;}
+
+  .end{
+    font-family:'JetBrains Mono', monospace;
+    color:var(--pen);
+    font-size:15px;
+    letter-spacing:0.2em;
+    margin-top:56px;
+  }
+
+  @media (max-width:940px){
+    body{font-size:18.5px;}
+    .wrap{padding:0 22px 90px;}
+    h1{font-size:34px;}
+    h2{font-size:23px;}
+    .sn{
+      position:static;
+      width:auto;
+      margin:22px 0;
+      border-top:0;
+      border-left:2px solid var(--pen);
+      padding:2px 0 2px 14px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="backlink"><a href="/cs229/">← CS229 notes</a></div>
+
+  <div class="col">
+  <header>
+    <div class="eyebrow">Lecture 10</div>
+    <h1>The same subspace, without the model</h1>
+    <p class="standfirst">Factor analysis needed a generative story, a latent variable and EM. PCA finds the same \(k\)-dimensional subspace with one eigendecomposition and no probability at all.</p>
+    <div class="byline">Pratyush · CS229 · PCA · eigenvectors · dimensionality reduction</div>
+  </header>
+
+  <p>Last lecture: posit \(z\sim\mathcal{N}(0,I)\) in \(\mathbb{R}^k\), map it into \(\mathbb{R}^d\) by \(\mu + \Lambda z\), add \(\Psi\)-covariance noise, then run EM because the likelihood has no closed form. A lot of machinery to say "the data approximately lies in a \(k\)-dimensional subspace, \(k \ll d\)."</p>
+
+  <p>PCA answers the same question directly. No latent variable, no likelihood, no iteration — an eigenvector calculation. That's the whole difference, and it's worth understanding what you give up for it.</p>
+
+  <hr class="rule">
+
+  <h2><span class="num">1</span>Redundancy</h2>
+
+  <p>You have \(n\) cars, \(d\) attributes each: top speed, turning radius, and so on. Unknown to you, \(x_i\) is top speed in mph and \(x_j\) is top speed in kph. These two coordinates are almost exactly linearly dependent — the only thing separating them is rounding. The data doesn't fill \(\mathbb{R}^d\); it sits on a \((d-1)\)-dimensional subspace, and you'd like to notice that automatically.</p>
+
+  <p>Less contrived. Survey RC helicopter pilots: \(x_1\) is piloting skill, \(x_2\) is how much they enjoy flying. RC helicopters are hard, so only people who genuinely love it stay long enough to get good. The two are strongly correlated — and you might reasonably posit that what's <em>really</em> being measured is one thing, some intrinsic piloting karma, along a diagonal axis, with a little noise off it.</p>
+
+  <figure>
+    <svg viewBox="0 0 620 280" width="100%" role="img" aria-label="A scatter of points along a diagonal axis, with u1 pointing along the long direction of the cloud and u2 perpendicular to it">
+      <line x1="150" y1="230" x2="510" y2="230" stroke="#1B1B18" stroke-width="1.2"/>
+      <line x1="150" y1="230" x2="150" y2="45" stroke="#1B1B18" stroke-width="1.2"/>
+      <text x="510" y="255" text-anchor="end" font-family="'Space Grotesk', sans-serif" font-size="14" fill="#8A877D">x₁ (skill)</text>
+      <text x="140" y="42" text-anchor="end" font-family="'Space Grotesk', sans-serif" font-size="14" fill="#8A877D">x₂ (enjoyment)</text>
+
+      <g fill="#1B1B18">
+        <circle cx="201" cy="203" r="3.2"/><circle cx="209" cy="186" r="3.2"/><circle cx="222" cy="178" r="3.2"/>
+        <circle cx="251" cy="181" r="3.2"/><circle cx="267" cy="155" r="3.2"/><circle cx="284" cy="167" r="3.2"/>
+        <circle cx="294" cy="155" r="3.2"/><circle cx="311" cy="131" r="3.2"/><circle cx="341" cy="135" r="3.2"/>
+        <circle cx="358" cy="114" r="3.2"/><circle cx="374" cy="125" r="3.2"/><circle cx="387" cy="116" r="3.2"/>
+        <circle cx="402" cy="91" r="3.2"/><circle cx="430" cy="90" r="3.2"/>
+      </g>
+
+      <line x1="315" y1="140" x2="399" y2="100" stroke="#C4142A" stroke-width="2"/>
+      <path d="M399,100 l-11,-1 l5,8 z" fill="#C4142A"/>
+      <text x="406" y="96" font-family="'JetBrains Mono', monospace" font-size="15" fill="#C4142A">u₁</text>
+
+      <line x1="315" y1="140" x2="338" y2="187" stroke="#C4142A" stroke-width="2" opacity="0.55"/>
+      <path d="M338,187 l1,-11 l-8,5 z" fill="#C4142A" opacity="0.55"/>
+      <text x="344" y="197" font-family="'JetBrains Mono', monospace" font-size="15" fill="#C4142A" opacity="0.7">u₂</text>
+    </svg>
+    <figcaption>One real direction, one noise direction. The question is how to find \(u_1\) without being told.</figcaption>
+  </figure>
+
+  <hr class="rule">
+
+  <h2><span class="num">2</span>Normalise first, and mean it</h2>
+
+  <p>Before anything else:</p>
+
+  \[ x_j^{(i)} \leftarrow \frac{x_j^{(i)} - \mu_j}{\sigma_j}, \qquad \mu_j = \frac1n\sum_i x_j^{(i)},\;\; \sigma_j^2 = \frac1n\sum_i (x_j^{(i)}-\mu_j)^2 \]
+
+  <p>Subtracting \(\mu_j\) centres the data, so that "variance along a direction" measures spread rather than distance from an arbitrary origin. Skippable when the data is known to have zero mean — acoustic or speech time series, for instance.</p>
+
+  <p class="sn"><b>PCA is not scale-invariant</b>Change the units on one feature and you change the principal components. The normalisation isn't housekeeping; it's a decision about which directions are allowed to look important.</p>
+
+  <p>Dividing by \(\sigma_j\) is the part worth being careful about. Suppose \(x_1\) is top speed in mph — values in the high tens or low hundreds — and \(x_2\) is the number of seats, values around 2 to 4. The direction of largest variance is then \(x_1\), and not because \(x_1\) matters more. Because it was measured in units that produce bigger numbers.</p>
+
+  <p>Skip the rescaling only when you already know the coordinates share a scale: pixel intensities in \(\{0,\dots,255\}\) are all the same kind of quantity, so leave them alone.</p>
+
+  <hr class="rule">
+
+  <h2><span class="num">3</span>Maximise the variance you keep</h2>
+
+  <p>Formalise "the major axis of variation" like this: find the unit vector \(u\) such that projecting the data onto \(u\) retains as much variance as possible. The data arrives with some amount of spread in it; we're choosing which direction to keep.</p>
+
+  <p>For unit \(u\), the projection of \(x\) onto \(u\) has signed length \(x^Tu\). So:</p>
+
+  \[ \frac1n\sum_{i=1}^{n}\left(x^{(i)T}u\right)^2 = \frac1n\sum_i u^T x^{(i)}x^{(i)T}u = u^T\underbrace{\left(\frac1n\sum_i x^{(i)}x^{(i)T}\right)}_{\Sigma}u \]
+
+  <p>where \(\Sigma\) is the empirical covariance (the data is centred, so no \(\mu\) terms). Maximise \(u^T\Sigma u\) subject to \(\lVert u\rVert = 1\). Lagrangian:</p>
+
+  \[ \mathcal{L}(u,\lambda) = u^T\Sigma u - \lambda(u^Tu - 1), \qquad \nabla_u\mathcal{L} = 2\Sigma u - 2\lambda u = 0 \]
+
+  \[ \Longrightarrow\quad \Sigma u = \lambda u \]
+
+  <p class="sn"><b>Not assumed — derived</b>Nobody decided to use eigenvectors. Stationarity of a quadratic form under a unit-norm constraint <em>is</em> the eigenvector equation.</p>
+
+  <p>So \(u\) has to be an eigenvector of \(\Sigma\). Which one? Substitute back: \(u^T\Sigma u = u^T\lambda u = \lambda\). The objective value <em>is</em> the eigenvalue, so take the largest.</p>
+
+  <p>For a \(k\)-dimensional subspace, take the top \(k\) eigenvectors \(u_1,\dots,u_k\). Since \(\Sigma\) is symmetric they are (or can be chosen) orthogonal, so they form a proper basis, and the representation of a point is</p>
+
+  \[ y^{(i)} = \begin{bmatrix} u_1^Tx^{(i)} \\ \vdots \\ u_k^Tx^{(i)}\end{bmatrix} \in \mathbb{R}^k \]
+
+  <div class="algo">
+    <span class="tag">PCA</span>
+    <ol>
+      <li>Normalise each feature to mean 0, variance 1.</li>
+      <li>Form \(\Sigma = \frac1n\sum_i x^{(i)}x^{(i)T}\).</li>
+      <li>Take its top \(k\) eigenvectors \(u_1,\dots,u_k\) — the <strong>principal components</strong>.</li>
+      <li>Represent each point by \(y^{(i)} = (u_1^Tx^{(i)},\dots,u_k^Tx^{(i)})\).</li>
+    </ol>
+  </div>
+
+  <hr class="rule">
+
+  <h2><span class="num">4</span>Two objectives, one answer</h2>
+
+  <p>You can also derive PCA by asking for the subspace that <em>minimises reconstruction error</em> — project each point onto the span, measure how far it moved, minimise the total. That's the PS4 version, and it looks like a different problem.</p>
+
+  <p>It isn't, and the reason is Pythagoras.</p>
+
+  <figure>
+    <svg viewBox="0 0 620 240" width="100%" role="img" aria-label="A point x, its projection onto the direction u, and the perpendicular residual forming a right triangle">
+      <line x1="140" y1="200" x2="436" y2="57" stroke="#1B1B18" stroke-width="1.4"/>
+      <text x="444" y="54" font-family="'JetBrains Mono', monospace" font-size="15" fill="#1B1B18">u</text>
+
+      <line x1="140" y1="200" x2="314" y2="116" stroke="#C4142A" stroke-width="3.5"/>
+      <line x1="140" y1="200" x2="339" y2="168" stroke="#1B1B18" stroke-width="1.8"/>
+      <line x1="339" y1="168" x2="314" y2="116" stroke="#8A877D" stroke-width="1.5" stroke-dasharray="5 4"/>
+
+      <path d="M305,120 L309,129 L318,125" fill="none" stroke="#8A877D" stroke-width="1.2"/>
+
+      <circle cx="339" cy="168" r="4.5" fill="#1B1B18"/>
+      <circle cx="314" cy="116" r="4.5" fill="#C4142A"/>
+      <circle cx="140" cy="200" r="3" fill="#1B1B18"/>
+
+      <text x="348" y="180" font-family="'JetBrains Mono', monospace" font-size="15" fill="#1B1B18">x</text>
+      <text x="200" y="145" font-family="'Space Grotesk', sans-serif" font-size="14" fill="#C4142A">xᵀu — kept</text>
+      <text x="352" y="140" font-family="'Space Grotesk', sans-serif" font-size="14" fill="#8A877D">residual — lost</text>
+    </svg>
+    <figcaption>\(\lVert x\rVert^2 = (x^Tu)^2 + \lVert\text{residual}\rVert^2\). The hypotenuse is fixed, so the two legs trade off exactly.</figcaption>
+  </figure>
+
+  <p class="sn"><b>Why they coincide</b>Total variance doesn't depend on \(u\). Kept + lost is a constant, so maximising one is minimising the other. Not two results — one, seen from either end.</p>
+
+  <p>For every point, \(\lVert x^{(i)}\rVert^2\) splits into the squared projection plus the squared residual. Sum over \(i\): the left side is the total variance of the dataset, which \(u\) cannot change. So variance retained and reconstruction error are complements. Maximising \(\sum_i\lVert y^{(i)}\rVert^2\) and minimising the projection error are the same optimisation problem wearing different clothes.</p>
+
+  <hr class="rule">
+
+  <h2><span class="num">5</span>So what did dropping the model cost?</h2>
+
+  <p>Line the two up. Factor analysis gives you a full generative story and, at the end, a <em>density</em> over \(\mathbb{R}^d\) — you can score a new point, sample new ones, handle missing coordinates, put the whole thing inside a bigger probabilistic model. The price is EM, local optima, and iterating to convergence.</p>
+
+  <p>PCA gives you a basis. That's it — no density, nothing to sample from, no likelihood to compare against another model. The price is one call to <code>eig</code>.</p>
+
+  <p class="lede">Factor analysis asks what process generated this data. PCA asks where the variance is. They land on the same subspace because, for this kind of data, those turn out to be nearly the same question.</p>
+
+  <p>Nearly, and it can be made precise — slightly beyond these notes, but it substantiates the "PCA is a stripped-down factor analysis" instinct. Take factor analysis and force the noise to be isotropic, \(\Psi = \sigma^2 I\) instead of a general diagonal. Then as \(\sigma^2 \to 0\), the maximum-likelihood \(\Lambda\) spans exactly the principal subspace, and the posterior mean of \(z\) becomes the orthogonal projection. PCA is the zero-noise, equal-variance limit of the model from Lecture 9.</p>
+
+  <p>The general diagonal \(\Psi\) is what factor analysis has and PCA doesn't: the ability to say that coordinate 3 is noisier than coordinate 7. PCA, having normalised everything to unit variance, has already asserted they're not.</p>
+
+  <hr class="rule">
+
+  <h2><span class="num">6</span>What it's for</h2>
+
+  <p><strong>Compression.</strong> \(d\) numbers become \(k\). Direct and obvious.</p>
+
+  <p><strong>Visualisation.</strong> Take \(k=2\) or \(3\) and actually plot the \(y^{(i)}\). One dot per car; look at which cars cluster.</p>
+
+  <p><strong>Preprocessing before supervised learning.</strong> Beyond the compute saving, reducing the input dimension shrinks the hypothesis class — a linear classifier over \(k\) dimensions has smaller VC dimension than one over \(d\). Straight out of Lecture 4: fewer parameters, smaller second term, less overfitting.</p>
+
+  <p><strong>Noise reduction.</strong> The pilot example: recover the karma axis from noisy measurements of skill and enjoyment. What's discarded isn't nothing — it's the part that varies least, which is the part you're most willing to call noise.</p>
+
+  <p><strong>Eigenfaces.</strong> A \(100\times100\) face image is a point in \(\mathbb{R}^{10000}\). Run PCA, keep the top components, and compare faces by \(\lVert y^{(i)} - y^{(j)}\rVert\) in the reduced space. The hope is that the retained components capture systematic variation between people, while lighting changes and imaging conditions fall into the directions you threw away. It works surprisingly well.</p>
+
+  <p>That last one is the honest summary of what PCA assumes: <strong>the interesting structure is the high-variance structure.</strong> Often true. Not a theorem.</p>
+
+  <div class="end">— fin —</div>
+  </div>
+
+</div>
+</body>
+</html>

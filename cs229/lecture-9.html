@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>When the Gaussian flattens — CS229 Lecture 9</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+  chtml: { scale: 1.0 },
+  options: { renderActions: { addMenu: [] } }
+};
+</script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+<style>
+  :root{
+    --paper:#FBFAF6;
+    --ink:#1B1B18;
+    --ink-soft:#57544C;
+    --ink-faint:#8A877D;
+    --pen:#C4142A;
+    --pen-soft:rgba(196,20,42,0.07);
+    --rule:rgba(27,27,24,0.14);
+    --grid:rgba(27,27,24,0.045);
+    --maxcol:700px;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:26px 26px;
+    color:var(--ink);
+    font-family:'Newsreader', Georgia, serif;
+    font-size:20px;
+    line-height:1.66;
+    font-weight:400;
+  }
+  .wrap{max-width:964px;margin:0 auto;padding:0 32px 120px;}
+  .col{max-width:var(--maxcol);position:relative;}
+
+  .backlink{
+    max-width:var(--maxcol);
+    padding:38px 0 0;
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:14px;
+    letter-spacing:0.04em;
+  }
+  .backlink a{color:var(--ink-faint);text-decoration:none;border-bottom:1px solid transparent;}
+  .backlink a:hover{color:var(--pen);border-bottom-color:var(--pen);}
+
+  header{padding:56px 0 10px;}
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--pen);
+  }
+  h1{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:46px;
+    line-height:1.12;
+    font-weight:700;
+    letter-spacing:-0.02em;
+    margin:14px 0 16px;
+  }
+  .standfirst{
+    font-size:21px;
+    color:var(--ink-soft);
+    font-style:italic;
+    margin:0 0 26px;
+  }
+  .byline{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    color:var(--ink-faint);
+    letter-spacing:0.04em;
+    border-top:1px solid var(--rule);
+    padding-top:14px;
+  }
+
+  h2{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:27px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    margin:64px 0 6px;
+    line-height:1.24;
+  }
+  h3{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:19px;
+    font-weight:500;
+    margin:40px 0 4px;
+  }
+  .num{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:1.55em;height:1.55em;
+    border:1.5px solid var(--pen);
+    border-radius:50%;
+    color:var(--pen);
+    font-size:0.62em;
+    font-family:'JetBrains Mono', monospace;
+    vertical-align:0.22em;
+    margin-right:0.5em;
+  }
+  p{margin:1.05em 0;}
+  strong{font-weight:500;color:var(--ink);}
+  em{font-style:italic;}
+  code{
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.84em;
+    background:var(--pen-soft);
+    padding:1px 5px;
+    border-radius:3px;
+  }
+  a{color:var(--ink);text-decoration-color:var(--pen);text-underline-offset:3px;}
+
+  .lede{border-left:2px solid var(--pen);padding-left:18px;margin:26px 0;color:var(--ink-soft);}
+
+  .sn{
+    position:absolute;
+    left:calc(var(--maxcol) + 26px);
+    width:172px;
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:14px;
+    line-height:1.5;
+    color:var(--pen);
+    border-top:1.5px solid var(--pen);
+    padding-top:8px;
+  }
+  .sn b{font-weight:700;display:block;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px;}
+
+  .rule{border:0;border-top:1px solid var(--rule);margin:56px 0;}
+
+  figure{margin:38px 0;}
+  figcaption{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:14px;
+    color:var(--ink-faint);
+    margin-top:10px;
+  }
+
+  .algo{
+    border:1px solid var(--rule);
+    background:rgba(255,255,255,0.55);
+    padding:20px 24px;
+    margin:30px 0;
+    font-size:18.5px;
+  }
+  .algo .tag{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--pen);
+    display:block;
+    margin-bottom:10px;
+  }
+  .algo p:first-of-type{margin-top:0;}
+  .algo p:last-child{margin-bottom:0;}
+
+  table{
+    border-collapse:collapse;
+    width:100%;
+    margin:28px 0;
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:16px;
+  }
+  th{
+    text-align:left;
+    font-weight:700;
+    font-size:12px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--pen);
+    border-bottom:1.5px solid var(--pen);
+    padding:0 12px 8px 0;
+  }
+  td{
+    padding:11px 12px 11px 0;
+    border-bottom:1px solid var(--rule);
+    vertical-align:top;
+  }
+
+  mjx-container[display="true"]{margin:1.2em 0 !important;}
+  mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%;}
+
+  .end{
+    font-family:'JetBrains Mono', monospace;
+    color:var(--pen);
+    font-size:15px;
+    letter-spacing:0.2em;
+    margin-top:56px;
+  }
+
+  @media (max-width:940px){
+    body{font-size:18.5px;}
+    .wrap{padding:0 22px 90px;}
+    h1{font-size:34px;}
+    h2{font-size:23px;}
+    table{font-size:14.5px;}
+    .sn{
+      position:static;
+      width:auto;
+      margin:22px 0;
+      border-top:0;
+      border-left:2px solid var(--pen);
+      padding:2px 0 2px 14px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="backlink"><a href="/cs229/">← CS229 notes</a></div>
+
+  <div class="col">
+  <header>
+    <div class="eyebrow">Lecture 9</div>
+    <h1>When the Gaussian flattens</h1>
+    <p class="standfirst">\(n \ll d\), a covariance matrix that collapses, and the model that keeps the correlations without paying for all of them.</p>
+    <div class="byline">Pratyush · CS229 · factor analysis · latent variables · EM</div>
+  </header>
+
+  <p>Fitting a single Gaussian is the easiest thing in the course. Two closed-form estimators:</p>
+
+  \[ \mu = \frac1n\sum_{i=1}^{n}x^{(i)}, \qquad \Sigma = \frac1n\sum_{i=1}^{n}(x^{(i)}-\mu)(x^{(i)}-\mu)^T \]
+
+  <p>and you're done. This works whenever the training set is comfortably larger than the dimension it lives in. When it isn't, it doesn't fail gracefully — it fails <em>completely</em>.</p>
+
+  <hr class="rule">
+
+  <h2><span class="num">1</span>Why it collapses</h2>
+
+  <p>With \(n\) points in \(\mathbb{R}^d\) and \(n < d+1\), the data spans at most an \((n-1)\)-dimensional affine subspace. There are directions in \(\mathbb{R}^d\) along which your data has <strong>exactly zero</strong> observed spread — not "little", zero. So the MLE assigns them zero variance, and \(\Sigma\) is singular.</p>
+
+  <p class="sn"><b>Not a numerical problem</b>\(\Sigma\) being singular is the <em>correct</em> maximum-likelihood answer. The question was badly posed. Regularising the arithmetic doesn't fix a question with no content.</p>
+
+  <p>Now look at what the density needs:</p>
+
+  \[ p(x) = \frac{1}{(2\pi)^{d/2}\lvert\Sigma\rvert^{1/2}}\exp\left(-\tfrac12 (x-\mu)^T\Sigma^{-1}(x-\mu)\right) \]
+
+  <p>\(\Sigma^{-1}\) doesn't exist and \(\lvert\Sigma\rvert^{1/2} = 0\), so the normaliser is \(1/0\). The fitted Gaussian has put <em>all</em> its probability mass on the affine hull of the data. It has flattened onto the subspace and has no thickness at all.</p>
+
+  <figure>
+    <svg viewBox="0 0 620 210" width="100%" role="img" aria-label="Left: many points with a healthy elliptical contour. Right: two points with a contour collapsed to a sliver.">
+      <g transform="translate(0,0)">
+        <ellipse cx="145" cy="105" rx="92" ry="52" transform="rotate(-22 145 105)" fill="none" stroke="#C4142A" stroke-width="1.8"/>
+        <ellipse cx="145" cy="105" rx="55" ry="31" transform="rotate(-22 145 105)" fill="none" stroke="#C4142A" stroke-width="1" opacity="0.5"/>
+        <g fill="#1B1B18">
+          <circle cx="90" cy="130" r="3"/><circle cx="118" cy="118" r="3"/><circle cx="140" cy="99" r="3"/>
+          <circle cx="168" cy="106" r="3"/><circle cx="196" cy="82" r="3"/><circle cx="112" cy="141" r="3"/>
+          <circle cx="158" cy="122" r="3"/><circle cx="184" cy="98" r="3"/><circle cx="132" cy="82" r="3"/>
+          <circle cx="205" cy="97" r="3"/><circle cx="99" cy="108" r="3"/><circle cx="172" cy="76" r="3"/>
+        </g>
+        <text x="145" y="192" text-anchor="middle" font-family="'Space Grotesk', sans-serif" font-size="14" fill="#8A877D">n ≫ d — a shape</text>
+      </g>
+
+      <line x1="305" y1="20" x2="305" y2="170" stroke="rgba(27,27,24,0.14)"/>
+
+      <g transform="translate(0,0)">
+        <ellipse cx="470" cy="105" rx="88" ry="4" transform="rotate(-30 470 105)" fill="none" stroke="#C4142A" stroke-width="1.8"/>
+        <circle cx="405" cy="143" r="3.5" fill="#1B1B18"/>
+        <circle cx="535" cy="67" r="3.5" fill="#1B1B18"/>
+        <text x="470" y="192" text-anchor="middle" font-family="'Space Grotesk', sans-serif" font-size="14" fill="#8A877D">n &lt; d+1 — Σ singular</text>
+      </g>
+    </svg>
+    <figcaption>Two points cannot tell you the thickness of a cloud in two dimensions. The contour has nowhere to go but flat.</figcaption>
+  </figure>
+
+  <hr class="rule">
+
+  <h2><span class="num">2</span>Two fixes that don't work</h2>
+
+  <p>The standard move is to restrict the space of \(\Sigma\) you'll consider.</p>
+
+  <p><strong>Diagonal \(\Sigma\).</strong> Fit only \(\Sigma_{jj} = \frac1n\sum_i (x_j^{(i)} - \mu_j)^2\), the per-coordinate variance. Contours become axis-aligned ellipses. Non-singular for \(n \ge 2\).</p>
+
+  <p><strong>\(\Sigma = \sigma^2 I\).</strong> One number, \(\sigma^2 = \frac{1}{nd}\sum_j\sum_i (x_j^{(i)}-\mu_j)^2\). Contours become spheres. Also fine for \(n\ge2\).</p>
+
+  <p class="lede">Both are non-singular. Both are useless for the thing you wanted. A diagonal \(\Sigma\) asserts that the coordinates are uncorrelated and independent — you came looking for covariance structure, and the repair was to assume there isn't any.</p>
+
+  <p>So the question sharpens. Can you keep <em>some</em> correlation structure without paying for a full \(d\times d\) matrix you can't afford?</p>
+
+  <hr class="rule">
+
+  <h2><span class="num">3</span>Digression: slicing a Gaussian</h2>
+
+  <p>Partition a jointly Gaussian vector, \(x_1\in\mathbb{R}^r\), \(x_2\in\mathbb{R}^s\):</p>
+
+  \[ x = \begin{bmatrix} x_1 \\ x_2\end{bmatrix} \sim \mathcal{N}\!\left(\begin{bmatrix}\mu_1\\\mu_2\end{bmatrix}, \begin{bmatrix}\Sigma_{11} & \Sigma_{12}\\ \Sigma_{21} & \Sigma_{22}\end{bmatrix}\right) \]
+
+  <p><strong>Marginal:</strong> \(x_1 \sim \mathcal{N}(\mu_1, \Sigma_{11})\). You just read the block off. Marginalising a Gaussian is deletion.</p>
+
+  <p><strong>Conditional:</strong> \(x_1\mid x_2 \sim \mathcal{N}(\mu_{1|2}, \Sigma_{1|2})\) with</p>
+
+  \[ \mu_{1|2} = \mu_1 + \Sigma_{12}\Sigma_{22}^{-1}(x_2-\mu_2), \qquad \Sigma_{1|2} = \Sigma_{11} - \Sigma_{12}\Sigma_{22}^{-1}\Sigma_{21} \]
+
+  <p class="sn"><b>Look at what's missing</b>\(\Sigma_{1|2}\) has no \(x_2\) in it. Observing \(x_2\) shrinks your uncertainty by a fixed amount no matter <em>what value</em> you observed. Peculiar to Gaussians, and worth not glossing over.</p>
+
+  <p>The conditional mean is the prior mean plus a correction term — literally a regression of \(x_1\) onto the observed deviation of \(x_2\), with \(\Sigma_{12}\Sigma_{22}^{-1}\) playing the role of regression coefficients. And the conditional covariance is the prior covariance <em>minus</em> something PSD: conditioning can only reduce uncertainty.</p>
+
+  <p>Park these two formulas. They turn out to be the entire E-step.</p>
+
+  <hr class="rule">
+
+  <h2><span class="num">4</span>The model</h2>
+
+  <p>Introduce a latent \(z\in\mathbb{R}^k\) with \(k < d\):</p>
+
+  \[ z \sim \mathcal{N}(0, I), \qquad x\mid z \sim \mathcal{N}(\mu + \Lambda z,\; \Psi) \]
+
+  <p>with parameters \(\mu\in\mathbb{R}^d\), \(\Lambda\in\mathbb{R}^{d\times k}\), and \(\Psi\in\mathbb{R}^{d\times d}\) <em>diagonal</em>. Equivalently, and more readably:</p>
+
+  \[ x = \mu + \Lambda z + \epsilon, \qquad \epsilon\sim\mathcal{N}(0,\Psi),\quad z\perp\epsilon \]
+
+  <p>The generative story in one sentence: <strong>draw a point in a low-dimensional space, map it affinely into \(\mathbb{R}^d\), then blur it with independent per-coordinate noise.</strong> The data lies near a \(k\)-dimensional plane sitting inside \(d\)-space, and everything off that plane is noise.</p>
+
+  <p>Which is a much better description of the \(n \ll d\) situation than "flat Gaussian" was. You genuinely don't have enough points to pin down a shape in \(d\) dimensions — so model the belief that the shape only <em>has</em> \(k\) dimensions.</p>
+
+  <h3>What distribution does this actually define?</h3>
+
+  <p>\(z\) and \(x\) are jointly Gaussian, so we only need means and blocks. \(\mathbb{E}[z]=0\) and \(\mathbb{E}[x] = \mu + \Lambda\mathbb{E}[z] + \mathbb{E}[\epsilon] = \mu\). For the blocks:</p>
+
+  \[ \Sigma_{zz} = I, \qquad \Sigma_{zx} = \mathbb{E}[z(\Lambda z + \epsilon)^T] = \mathbb{E}[zz^T]\Lambda^T + \mathbb{E}[z\epsilon^T] = \Lambda^T \]
+
+  <p>(the cross term dies by independence and zero mean), and</p>
+
+  \[ \Sigma_{xx} = \mathbb{E}[(\Lambda z + \epsilon)(\Lambda z + \epsilon)^T] = \Lambda\mathbb{E}[zz^T]\Lambda^T + \mathbb{E}[\epsilon\epsilon^T] = \Lambda\Lambda^T + \Psi \]
+
+  \[ \begin{bmatrix} z\\x\end{bmatrix} \sim \mathcal{N}\!\left(\begin{bmatrix}\vec{0}\\\mu\end{bmatrix}, \begin{bmatrix} I & \Lambda^T\\ \Lambda & \Lambda\Lambda^T+\Psi\end{bmatrix}\right) \]
+
+  <p>Marginalise and there it is:</p>
+
+  \[ x \sim \mathcal{N}(\mu,\; \Lambda\Lambda^T + \Psi) \]
+
+  <figure>
+    <svg viewBox="0 0 620 175" width="100%" role="img" aria-label="Sigma equals Lambda times Lambda transpose plus Psi: a d by d square equals a tall thin matrix times a wide short matrix, plus a diagonal matrix">
+      <rect x="85" y="20" width="110" height="110" fill="rgba(27,27,24,0.05)" stroke="rgba(27,27,24,0.3)"/>
+      <text x="140" y="82" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="17" fill="#1B1B18">Σ</text>
+      <text x="140" y="152" text-anchor="middle" font-family="'Space Grotesk', sans-serif" font-size="13" fill="#8A877D">d × d</text>
+
+      <text x="217" y="82" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="20" fill="#1B1B18">=</text>
+
+      <rect x="242" y="20" width="40" height="110" fill="rgba(196,20,42,0.12)" stroke="#C4142A"/>
+      <text x="262" y="82" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="15" fill="#C4142A">Λ</text>
+      <text x="262" y="152" text-anchor="middle" font-family="'Space Grotesk', sans-serif" font-size="13" fill="#8A877D">d × k</text>
+
+      <rect x="290" y="55" width="110" height="40" fill="rgba(196,20,42,0.12)" stroke="#C4142A"/>
+      <text x="345" y="82" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="15" fill="#C4142A">Λᵀ</text>
+      <text x="345" y="152" text-anchor="middle" font-family="'Space Grotesk', sans-serif" font-size="13" fill="#8A877D">k × d</text>
+
+      <text x="422" y="82" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="20" fill="#1B1B18">+</text>
+
+      <rect x="447" y="20" width="110" height="110" fill="none" stroke="rgba(27,27,24,0.3)"/>
+      <line x1="451" y1="24" x2="553" y2="126" stroke="#C4142A" stroke-width="7" stroke-linecap="round" opacity="0.35"/>
+      <text x="502" y="152" text-anchor="middle" font-family="'Space Grotesk', sans-serif" font-size="13" fill="#8A877D">Ψ diagonal</text>
+    </svg>
+    <figcaption>Low rank plus diagonal. \(\Lambda\Lambda^T\) has rank at most \(k\) and carries all the correlations; \(\Psi\) is what keeps the whole thing invertible.</figcaption>
+  </figure>
+
+  <p class="sn"><b>Why it never collapses</b>\(\Lambda\Lambda^T\) is singular by construction (rank \(\le k < d\)). Adding a strictly positive diagonal \(\Psi\) is exactly what restores full rank — the noise floor <em>is</em> the fix.</p>
+
+  <p>So factor analysis is a structural claim about \(\Sigma\): <strong>low rank plus diagonal.</strong> Put the three options side by side and it's clearly the right middle ground.</p>
+
+  <table>
+    <thead>
+      <tr><th>Model</th><th>Parameters in Σ</th><th>Correlations</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Full \(\Sigma\)</td><td>\(d(d+1)/2\)</td><td>all of them — needs \(n \ge d+1\)</td></tr>
+      <tr><td>Diagonal \(\Sigma\)</td><td>\(d\)</td><td>none</td></tr>
+      <tr><td>\(\Lambda\Lambda^T + \Psi\)</td><td>\(dk + d\)</td><td>confined to a \(k\)-dim subspace</td></tr>
+    </tbody>
+  </table>
+
+  <hr class="rule">
+
+  <h2><span class="num">5</span>Fitting it: EM again</h2>
+
+  <p>The log-likelihood is a Gaussian density in \(\Lambda\Lambda^T+\Psi\). Try to maximise it directly and you get nowhere — no closed form is known. But \(z\) is latent and the model is exactly the shape Lecture 8 handles, so: EM.</p>
+
+  <h3>E-step</h3>
+
+  <p>We need \(Q_i(z^{(i)}) = p(z^{(i)}\mid x^{(i)};\mu,\Lambda,\Psi)\). We already have the joint. Substitute its blocks into the conditional formulas from §3 and the E-step falls out with no work:</p>
+
+  \[ \mu_{z^{(i)}\mid x^{(i)}} = \Lambda^T(\Lambda\Lambda^T+\Psi)^{-1}(x^{(i)}-\mu) \]
+  \[ \Sigma_{z^{(i)}\mid x^{(i)}} = I - \Lambda^T(\Lambda\Lambda^T+\Psi)^{-1}\Lambda \]
+
+  <p>That's why the digression was there. The posterior over the latent factors is just a Gaussian conditional, and conditioning Gaussians is a formula.</p>
+
+  <h3>M-step for \(\Lambda\)</h3>
+
+  <p>Maximise \(\sum_i \mathbb{E}_{z\sim Q_i}[\log p(x^{(i)}\mid z^{(i)};\mu,\Lambda,\Psi)]\) over \(\Lambda\) — drop everything not depending on it, take the gradient, set to zero:</p>
+
+  \[ \Lambda = \left(\sum_{i=1}^{n}(x^{(i)}-\mu)\,\mathbb{E}\big[z^{(i)T}\big]\right)\left(\sum_{i=1}^{n}\mathbb{E}\big[z^{(i)}z^{(i)T}\big]\right)^{-1} \]
+
+  <p class="sn"><b>Recognise it</b>\(\theta^T = (y^TX)(X^TX)^{-1}\). It's the normal equation with \(z\) in the role of the design matrix — because \(x\) really is a linear function of \(z\) plus noise, and given guesses for \(z\), finding \(\Lambda\) is regression.</p>
+
+  <p>Which should look extremely familiar. It's least squares, fitting the unknown linear map \(\Lambda\) from the latent \(z\)'s to the observed \(x\)'s.</p>
+
+  <hr class="rule">
+
+  <h2><span class="num">6</span>The trap</h2>
+
+  <p>Now evaluate those two expectations under \(Q_i = \mathcal{N}(\mu_{z|x}, \Sigma_{z|x})\):</p>
+
+  \[ \mathbb{E}[z^{(i)T}] = \mu_{z^{(i)}\mid x^{(i)}}^T, \qquad \mathbb{E}[z^{(i)}z^{(i)T}] = \mu_{z^{(i)}\mid x^{(i)}}\mu_{z^{(i)}\mid x^{(i)}}^T + \Sigma_{z^{(i)}\mid x^{(i)}} \]
+
+  <p>The second one uses \(\mathbb{E}[YY^T] = \mathbb{E}[Y]\mathbb{E}[Y]^T + \mathrm{Cov}(Y)\). Substituting:</p>
+
+  \[ \Lambda = \left(\sum_i (x^{(i)}-\mu)\mu_{z^{(i)}|x^{(i)}}^T\right)\left(\sum_i \mu_{z^{(i)}|x^{(i)}}\mu_{z^{(i)}|x^{(i)}}^T + \Sigma_{z^{(i)}|x^{(i)}}\right)^{-1} \]
+
+  <p class="sn"><b>The mistake to not make</b>Compute \(\mathbb{E}[z]\) in the E-step, plug it in wherever \(z\) appears in the M-step. It works for mixtures of Gaussians. It is wrong here.</p>
+
+  <p>That \(\Sigma_{z|x}\) sitting inside the inverse is the whole point of this section. \(\mathbb{E}[zz^T] \ne \mathbb{E}[z]\mathbb{E}[z]^T\) — they differ by exactly the posterior covariance.</p>
+
+  <p>So if you'd treated the E-step as producing a <em>best guess</em> \(\hat z^{(i)}\) and then run ordinary least squares on those guesses, you'd be doing regression while pretending you know \(z\) exactly. You don't. The posterior is a distribution with real width, and the M-step has to carry that width.</p>
+
+  <p class="lede">The E-step returns a distribution, not a point. The M-step maximises an expectation <em>under</em> that distribution — so whichever moments the objective needs, all of them come along. Collapse \(Q\) to its mean and you're no longer running EM.</p>
+
+  <p>The remaining updates are anticlimactic by comparison. \(\mu = \frac1n\sum_i x^{(i)}\) — and note it doesn't depend on \(Q_i\) at all, so compute it once and never touch it again. \(\Psi\) is the diagonal of</p>
+
+  \[ \Phi = \frac1n\sum_{i=1}^{n}\Big(x^{(i)}x^{(i)T} - x^{(i)}\mu_{z|x}^T\Lambda^T - \Lambda\mu_{z|x}x^{(i)T} + \Lambda\big(\mu_{z|x}\mu_{z|x}^T + \Sigma_{z|x}\big)\Lambda^T\Big) \]
+
+  <p>with \(\Psi_{ii} = \Phi_{ii}\) and everything off-diagonal thrown away, because \(\Psi\) was diagonal by assumption.</p>
+
+  <hr class="rule">
+
+  <h2>The reframe</h2>
+
+  <p>The instinct with \(n \ll d\) is to treat it as a shortage — not enough data, patch the estimator, move on. Factor analysis treats it as <em>information</em>. If \(n\) points can't determine a shape in \(d\) dimensions, that's a reason to believe the shape doesn't have \(d\) dimensions.</p>
+
+  <p>So you write that belief into the model: \(k\) real directions, and independent noise on top. The singular covariance stops being a failure to be worked around and becomes the structure you were modelling all along.</p>
+
+  <div class="end">— fin —</div>
+  </div>
+
+</div>
+</body>
+</html>
