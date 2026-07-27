@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hard guesses and soft guesses — CS229 Lecture 7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+  chtml: { scale: 1.0 },
+  options: { renderActions: { addMenu: [] } }
+};
+</script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+<style>
+  :root{
+    --paper:#FBFAF6;
+    --ink:#1B1B18;
+    --ink-soft:#57544C;
+    --ink-faint:#8A877D;
+    --pen:#C4142A;
+    --pen-soft:rgba(196,20,42,0.07);
+    --rule:rgba(27,27,24,0.14);
+    --grid:rgba(27,27,24,0.045);
+    --maxcol:700px;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:26px 26px;
+    color:var(--ink);
+    font-family:'Newsreader', Georgia, serif;
+    font-size:20px;
+    line-height:1.66;
+    font-weight:400;
+  }
+  .wrap{max-width:964px;margin:0 auto;padding:0 32px 120px;}
+  .col{max-width:var(--maxcol);position:relative;}
+
+  .backlink{
+    max-width:var(--maxcol);
+    padding:38px 0 0;
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:14px;
+    letter-spacing:0.04em;
+  }
+  .backlink a{color:var(--ink-faint);text-decoration:none;border-bottom:1px solid transparent;}
+  .backlink a:hover{color:var(--pen);border-bottom-color:var(--pen);}
+
+  header{padding:56px 0 10px;}
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--pen);
+  }
+  h1{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:46px;
+    line-height:1.12;
+    font-weight:700;
+    letter-spacing:-0.02em;
+    margin:14px 0 16px;
+  }
+  .standfirst{
+    font-size:21px;
+    color:var(--ink-soft);
+    font-style:italic;
+    margin:0 0 26px;
+  }
+  .byline{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    color:var(--ink-faint);
+    letter-spacing:0.04em;
+    border-top:1px solid var(--rule);
+    padding-top:14px;
+  }
+
+  h2{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:27px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    margin:64px 0 6px;
+    line-height:1.24;
+  }
+  h3{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:19px;
+    font-weight:500;
+    margin:40px 0 4px;
+  }
+  .num{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:1.55em;height:1.55em;
+    border:1.5px solid var(--pen);
+    border-radius:50%;
+    color:var(--pen);
+    font-size:0.62em;
+    font-family:'JetBrains Mono', monospace;
+    vertical-align:0.22em;
+    margin-right:0.5em;
+  }
+  p{margin:1.05em 0;}
+  strong{font-weight:500;color:var(--ink);}
+  em{font-style:italic;}
+  code{
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.84em;
+    background:var(--pen-soft);
+    padding:1px 5px;
+    border-radius:3px;
+  }
+  a{color:var(--ink);text-decoration-color:var(--pen);text-underline-offset:3px;}
+
+  .lede{border-left:2px solid var(--pen);padding-left:18px;margin:26px 0;color:var(--ink-soft);}
+
+  .sn{
+    position:absolute;
+    left:calc(var(--maxcol) + 26px);
+    width:172px;
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:14px;
+    line-height:1.5;
+    color:var(--pen);
+    border-top:1.5px solid var(--pen);
+    padding-top:8px;
+  }
+  .sn b{font-weight:700;display:block;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px;}
+
+  .rule{border:0;border-top:1px solid var(--rule);margin:56px 0;}
+
+  figure{margin:38px 0;}
+  figcaption{
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    font-size:14px;
+    color:var(--ink-faint);
+    margin-top:10px;
+  }
+
+  .algo{
+    border:1px solid var(--rule);
+    background:rgba(255,255,255,0.55);
+    padding:20px 24px;
+    margin:30px 0;
+    font-size:18.5px;
+  }
+  .algo .tag{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--pen);
+    display:block;
+    margin-bottom:10px;
+  }
+  .algo ol{margin:0;padding-left:20px;}
+  .algo li{margin:8px 0;}
+
+  mjx-container[display="true"]{margin:1.2em 0 !important;}
+  mjx-container{overflow-x:auto;overflow-y:hidden;max-width:100%;}
+
+  .end{
+    font-family:'JetBrains Mono', monospace;
+    color:var(--pen);
+    font-size:15px;
+    letter-spacing:0.2em;
+    margin-top:56px;
+  }
+
+  @media (max-width:940px){
+    body{font-size:18.5px;}
+    .wrap{padding:0 22px 90px;}
+    h1{font-size:34px;}
+    h2{font-size:23px;}
+    .sn{
+      position:static;
+      width:auto;
+      margin:22px 0;
+      border-top:0;
+      border-left:2px solid var(--pen);
+      padding:2px 0 2px 14px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="backlink"><a href="/cs229/">← CS229 notes</a></div>
+
+  <div class="col">
+  <header>
+    <div class="eyebrow">Lecture 7a &amp; 7b</div>
+    <h1>Hard guesses and soft guesses</h1>
+    <p class="standfirst">k-means, mixtures of Gaussians, and the moment you realise EM is just GDA with the labels torn off.</p>
+    <div class="byline">Pratyush · CS229 · k-means · GMM · EM</div>
+  </header>
+
+  <p>Everything up to here had a \(y\). You were handed inputs and the answers, and the whole job was learning the map between them. Unsupervised learning starts somewhere much less comfortable: you get \(\{x^{(1)},\dots,x^{(n)}\}\), \(x^{(i)}\in\mathbb{R}^d\), and <em>nothing else</em>. No labels. Not even a promise that groups exist.</p>
+
+  <p>So you have to invent the structure yourself. And the first question is what "structure" even means when nobody's told you the answer. k-means gives one answer, and it's almost stupidly direct: <strong>a cluster is a point, and belonging means being close to it.</strong></p>
+
+  <hr class="rule">
+
+  <h2><span class="num">1</span>k-means: minimise the distance to your own mean</h2>
+
+  <p>Pick \(k\) centroids \(\mu_1,\dots,\mu_k \in \mathbb{R}^d\), throw them down randomly (usually at \(k\) of the training points, which at least guarantees you land in the data). Then run two moves against each other until nothing changes.</p>
+
+  <div class="algo">
+    <span class="tag">k-means</span>
+    <ol>
+      <li><strong>Assign.</strong> For every \(i\):
+        \[ c^{(i)} := \arg\min_j \; \lVert x^{(i)} - \mu_j \rVert^2 \]
+      </li>
+      <li><strong>Move.</strong> For every \(j\):
+        \[ \mu_j := \frac{\sum_{i=1}^{n} \mathbb{1}\{c^{(i)}=j\}\,x^{(i)}}{\sum_{i=1}^{n} \mathbb{1}\{c^{(i)}=j\}} \]
+      </li>
+    </ol>
+  </div>
+
+  <p>Paint every point the colour of its nearest cross. Then drag every cross to the middle of its own colour. Repeat. That's the entire algorithm, and the whole reason it works is that <em>each step is a minimisation of the same objective.</em></p>
+
+  <h3>The distortion function</h3>
+
+  <p>Write down what we're actually paying for:</p>
+
+  \[ J(c,\mu) = \sum_{i=1}^{n} \lVert x^{(i)} - \mu_{c^{(i)}} \rVert^2 \]
+
+  <p class="sn"><b>Why it converges</b>Coordinate descent: freeze \(\mu\), minimise over \(c\); freeze \(c\), minimise over \(\mu\). Neither move can ever increase \(J\).</p>
+
+  <p>Total squared distance from each point to the centroid it was assigned. Now look at the two steps again. The assign step minimises \(J\) over \(c\) with \(\mu\) held fixed — of course it does, sending each point to its nearest centroid is the pointwise-best choice. The move step minimises \(J\) over \(\mu\) with \(c\) held fixed — also of course, because the minimiser of \(\sum \lVert x - \mu\rVert^2\) is the mean.</p>
+
+  <p><strong>k-means is exactly coordinate descent on \(J\).</strong> So \(J\) decreases monotonically, and it's bounded below by zero, so it converges. Clean.</p>
+
+  <h3>But converges to <em>what</em></h3>
+
+  <p>Here's the catch, and it's the thing I'd underline: \(J\) is <strong>non-convex</strong>. Monotone decrease buys you convergence, not correctness. You slide down into whatever basin your random init dropped you in, and there's no mechanism that lets you climb back out.</p>
+
+  <figure>
+    <svg viewBox="0 0 620 250" width="100%" role="img" aria-label="A non-convex curve with a shallow local minimum on the left and a deeper global minimum on the right">
+      <line x1="30" y1="205" x2="590" y2="205" stroke="#1B1B18" stroke-width="1.2"/>
+      <line x1="55" y1="30" x2="55" y2="215" stroke="#1B1B18" stroke-width="1.2"/>
+      <text x="20" y="40" font-family="'JetBrains Mono', monospace" font-size="15" fill="#1B1B18">J</text>
+      <text x="580" y="232" font-family="'JetBrains Mono', monospace" font-size="15" fill="#1B1B18">θ</text>
+      <path d="M75,55 C135,215 195,80 255,120 C300,150 330,190 385,185 C440,180 470,60 545,45"
+            fill="none" stroke="#C4142A" stroke-width="2.2" stroke-linecap="round"/>
+      <circle cx="163" cy="146" r="4.5" fill="#C4142A"/>
+      <circle cx="399" cy="185" r="4.5" fill="#C4142A"/>
+      <text x="120" y="180" font-family="'Space Grotesk', sans-serif" font-size="14" fill="#C4142A">local</text>
+      <text x="368" y="218" font-family="'Space Grotesk', sans-serif" font-size="14" fill="#C4142A">global</text>
+    </svg>
+    <figcaption>Coordinate descent finds <em>a</em> valley. Which valley is decided by where you were dropped.</figcaption>
+  </figure>
+
+  <p>The fix is embarrassingly practical: run it many times from different random inits, and keep the clustering with the lowest \(J(c,\mu)\). No theory, just brute force over initialisations. (In theory k-means can also oscillate between distinct clusterings that share the same \(J\). In practice, never seen it.)</p>
+
+  <hr class="rule">
+
+  <h2><span class="num">2</span>Mixtures of Gaussians: a cluster as a distribution</h2>
+
+  <p>k-means' notion of a cluster is a <em>point</em>. That's a lot of information thrown away. Real clusters have spread, shape, orientation — a long thin cluster and a fat round one shouldn't be described by the same object. So upgrade: <strong>a cluster is a Gaussian.</strong></p>
+
+  <p>Same setup, \(\{x^{(1)},\dots,x^{(n)}\}\), still no labels, still want \(k\) groups. But now model how the data was <em>generated</em>:</p>
+
+  \[ p(x^{(i)}, z^{(i)}) = p(x^{(i)} \mid z^{(i)})\, p(z^{(i)}) \]
+
+  <p class="sn"><b>Contrast with GDA</b>GDA shared one \(\Sigma\) across classes — that's what made its boundary linear. Here every component keeps its own \(\Sigma_j\), so the clusters can differ in shape.</p>
+
+  <p>with \(z^{(i)} \sim \text{Multinomial}(\phi)\) picking which cluster, and \(x^{(i)} \mid z^{(i)}=j \sim \mathcal{N}(\mu_j, \Sigma_j)\) drawing the point from that cluster. Roll a \(k\)-sided die, then sample from the Gaussian it landed on. That's the mixture of Gaussians.</p>
+
+  <p>Two things to note against GDA. First, \(z^{(i)}\) is multinomial, not Bernoulli — more than two groups. Second, and more importantly, <strong>there's no shared \(\Sigma\).</strong> Each component gets its own \(\Sigma_j\). GDA tied them together on purpose; here we don't, because nothing is asking us for a linear decision boundary.</p>
+
+  <p>And the real difference: the \(z^{(i)}\) are <strong>latent</strong>. In GDA the labels were sitting right there. Here they're hidden. That single fact is what makes this hard.</p>
+
+  <h3>Why the vanilla approach dies</h3>
+
+  <p>Write the log-likelihood the usual way:</p>
+
+  \[ \ell(\phi,\mu,\Sigma) = \sum_{i=1}^{n} \log p(x^{(i)};\phi,\mu,\Sigma) = \sum_{i=1}^{n} \log \sum_{z^{(i)}=1}^{k} p(x^{(i)} \mid z^{(i)};\mu,\Sigma)\, p(z^{(i)};\phi) \]
+
+  <p class="sn"><b>The real blocker</b>The sum is <em>inside</em> the log. The log can't pass through it, so nothing separates and no term decouples.</p>
+
+  <p>Set the derivatives to zero and solve. Try it. It doesn't come apart — there's no closed form. And the reason isn't algebraic bad luck, it's structural: you're trying to fit \(\mu_j, \Sigma_j\) and simultaneously decide which points those parameters are supposed to describe. Each depends on the other. The unknown \(z\) and the unknown \(\theta\) are tangled, and setting one gradient to zero doesn't untangle them.</p>
+
+  <p>Compare: <em>if</em> you knew the \(z^{(i)}\), it's trivial —</p>
+
+  \[ \ell(\phi,\mu,\Sigma) = \sum_{i=1}^{n} \log p(x^{(i)} \mid z^{(i)};\mu,\Sigma) + \log p(z^{(i)};\phi) \]
+
+  <p>and the log sits directly on the density. Maximise and you get exactly GDA's estimators: \(\phi_j\) is the fraction of points in cluster \(j\), \(\mu_j\) their mean, \(\Sigma_j\) their scatter. Everything is easy the moment the labels exist.</p>
+
+  <p class="lede">So: knowing \(z\) makes fitting \(\theta\) easy, and knowing \(\theta\) makes guessing \(z\) easy. Neither is known. Alternate.</p>
+
+  <hr class="rule">
+
+  <h2><span class="num">3</span>EM: guess, then fit, then repeat</h2>
+
+  <div class="algo">
+    <span class="tag">EM for mixtures of Gaussians</span>
+    <p style="margin-top:0"><strong>E-step</strong> — guess the hidden labels, softly. For each \(i,j\):</p>
+    \[ w_j^{(i)} := p(z^{(i)}=j \mid x^{(i)};\phi,\mu,\Sigma) = \frac{p(x^{(i)}\mid z^{(i)}=j;\mu,\Sigma)\,p(z^{(i)}=j;\phi)}{\sum_{l=1}^{k} p(x^{(i)}\mid z^{(i)}=l;\mu,\Sigma)\,p(z^{(i)}=l;\phi)} \]
+    <p><strong>M-step</strong> — fit the parameters, pretending the guesses were the truth:</p>
+    \[ \phi_j := \frac{1}{n}\sum_{i=1}^{n} w_j^{(i)}, \qquad
+       \mu_j := \frac{\sum_i w_j^{(i)} x^{(i)}}{\sum_i w_j^{(i)}}, \qquad
+       \Sigma_j := \frac{\sum_i w_j^{(i)} (x^{(i)}-\mu_j)(x^{(i)}-\mu_j)^T}{\sum_i w_j^{(i)}} \]
+  </div>
+
+  <p>The E-step is just Bayes' rule. Given where the Gaussians currently sit, how likely is it that point \(i\) came from component \(j\)? Prior \(\phi_j\) times likelihood, normalised over the \(k\) components. Nothing exotic.</p>
+
+  <p>The M-step is where I think the point lands. Put the supervised formulas next to the EM formulas and the only difference is:</p>
+
+  \[ \mathbb{1}\{z^{(i)}=j\} \;\longrightarrow\; w_j^{(i)} \]
+
+  <p>An indicator became a weight in \([0,1]\). That's the whole modification. <strong>EM is GDA where the hard label has been replaced by a soft responsibility.</strong> Every point contributes to every cluster's mean and covariance, just weighted by how much it plausibly belongs there.</p>
+
+  <p class="sn"><b>Soft vs hard</b>A hard guess commits: \(\{0,1\}\). A soft guess hedges: \([0,1]\). k-means is the hard limit of the same idea.</p>
+
+  <p>Which finally makes the relationship obvious. k-means <em>is</em> this algorithm with the guesses hardened. Assign step = E-step with the responsibility collapsed to 1 for the nearest cluster and 0 elsewhere. Move step = M-step with those 0/1 weights. Same skeleton, coarser guesses.</p>
+
+  <p>And the same weakness carries over: EM is susceptible to local optima too, for the same reason — it's an alternating ascent on a non-concave likelihood. Reinitialise from several starting points and keep the best. The pattern doesn't change.</p>
+
+  <hr class="rule">
+
+  <h2>What I'm still owed</h2>
+
+  <p>EM reads like a good heuristic. Guess, fit, repeat — sure, that's plausible, but plausible isn't a guarantee. Two things are still open:</p>
+
+  <p><strong>Where did it come from?</strong> Nobody derived the E-step; it was proposed. Why <em>that</em> guess and not some other?</p>
+
+  <p><strong>Does it actually improve the likelihood?</strong> k-means at least had \(J\) decreasing monotonically as a proof. EM has been given no such object yet.</p>
+
+  <p>Both get answered by the general form of EM — a lower bound on \(\ell\) built with Jensen's inequality, tightened at the current parameters (E-step) and then maximised (M-step). That's the next set of notes, and it's the one that turns this from a trick into a theorem.</p>
+
+  <div class="end">— fin —</div>
+  </div>
+
+</div>
+</body>
+</html>
